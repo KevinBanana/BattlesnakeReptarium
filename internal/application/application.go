@@ -1,7 +1,9 @@
 package application
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"BattlesnakeReptarium/internal"
 
@@ -21,6 +23,9 @@ func New() *App {
 	if err != nil {
 		log.Errorf("New::conf.GetConfig: %v", err)
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
 	return &application
 }
