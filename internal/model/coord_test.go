@@ -14,10 +14,10 @@ var (
 
 func TestCoord_GetDistance(t *testing.T) {
 	tests := []struct {
-		name   string
-		c1     Coord
-		c2     Coord
-		expect float64
+		name             string
+		location1        Coord
+		location2        Coord
+		expectedDistance float64
 	}{
 		{"Test horizontal distance", x0y0, x1y0, 1.0},
 		{"Test vertical distance", x0y0, x0y1, 1.0},
@@ -26,9 +26,9 @@ func TestCoord_GetDistance(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.c1.GetDistance(tc.c2)
-			if got != tc.expect {
-				t.Errorf("Expected %f, got %f", tc.expect, got)
+			got := tc.location1.GetDistance(tc.location2)
+			if got != tc.expectedDistance {
+				t.Errorf("Expected %f, got %f", tc.expectedDistance, got)
 			}
 		})
 	}

@@ -24,9 +24,11 @@ func (c *Config) GetConfig() error {
 	if err != nil {
 		return errors.Wrap(err, "GetConfig::os.ReadFile")
 	}
+
 	err = yaml.Unmarshal(configFile, c)
 	if err != nil {
 		log.Fatalf("getConfig::Unmarshal: %v", err)
 	}
+	
 	return nil
 }

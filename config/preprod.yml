@@ -1,2 +1,2 @@
 logConfig:
-  level: "debug"
+  level: "info"
