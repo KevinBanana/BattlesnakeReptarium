@@ -11,7 +11,7 @@ import (
 
 type DB interface {
 	CreateGame(ctx context.Context, game model.Game) error
-	GetGame(ctx context.Context, id string) (model.Game, error)
+	GetGame(ctx context.Context, id string) (*model.Game, error)
 }
 
 type Database struct {
