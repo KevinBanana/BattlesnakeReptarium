@@ -12,18 +12,29 @@ import (
 )
 
 type GameController struct {
-	bananaBotV1   services.BananaBotV1Svc
+	bot           services.Bot
 	gameEngineSvc services.GameEngineSvc
 }
 
-func NewGameController(db repo.DB) GameController {
-	bananaBotV1Svc := services.NewBananaBotV1Svc()
+func NewGameController(db repo.DB, activeBot string) GameController {
+	botSvc := createSelectedBot(activeBot)
 	gameEngineSvc := services.NewGameEngineSvc(db)
 
 	return GameController{
-		bananaBotV1:   *bananaBotV1Svc,
+		bot:           *botSvc,
 		gameEngineSvc: *gameEngineSvc,
 	}
+}
+
+func createSelectedBot(activeBot string) *services.Bot {
+	var botSvc services.Bot
+
+	switch activeBot {
+	case "banana_bot_v1":
+		botSvc = services.NewBananaBotV1Svc()
+	}
+
+	return &botSvc
 }
 
 func (g GameController) StartGame(c *gin.Context) {
