@@ -1,2 +1,1 @@
-logConfig:
-  level: "error"
+level: "error"

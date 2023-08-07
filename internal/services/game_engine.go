@@ -1,4 +1,4 @@
-package bots
+package services
 
 import (
 	"context"
@@ -6,8 +6,7 @@ import (
 	"BattlesnakeReptarium/internal/model"
 )
 
-type BananaBotV1Service interface {
+type GameEngineService interface {
 	StartGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error
-	GetMove(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) (model.SnakeAction, error)
 	EndGame(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) error
 }
