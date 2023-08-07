@@ -9,3 +9,9 @@ import (
 type BananaBotV1Service interface {
 	GetMove(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) (model.SnakeAction, error)
 }
+
+type BananaBotV1Svc struct{}
+
+func NewBananaBotV1Svc() *BananaBotV1Svc {
+	return &BananaBotV1Svc{}
+}
