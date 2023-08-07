@@ -15,17 +15,13 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	gameEngineGroup := router.Group("game_engine")
+	gameEngineGroup := router.Group("")
 	{
 		gameEngine := new(controllers.GameController)
 		gameEngineGroup.POST("/start", gameEngine.StartGame)
 		gameEngineGroup.POST("/end", gameEngine.EndGame)
-	}
-
-	botGroup := router.Group("bot")
-	{
-		bot := new(controllers.BotController)
-		botGroup.POST("/move", bot.GetMove)
+		gameEngineGroup.POST("/move", gameEngine.CalculateMove)
+		gameEngineGroup.GET("/", gameEngine.Health)
 	}
 
 	log.Info("Router created")
