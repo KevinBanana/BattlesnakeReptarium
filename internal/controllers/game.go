@@ -23,6 +23,7 @@ func (g GameController) EndGame(c *gin.Context) {
 }
 
 func (g GameController) CalculateMove(c *gin.Context) {
+	// TODO set active bot from config
 	c.JSON(http.StatusInternalServerError, gin.Error{
 		Err: errors.New("not implemented"),
 	})
