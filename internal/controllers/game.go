@@ -54,7 +54,13 @@ func (g GameController) EndGame(c *gin.Context) {
 }
 
 func (g GameController) CalculateMove(c *gin.Context) {
-	// TODO ensure bot is not nil, otherwise reject request
+	if g.bot == nil {
+		c.JSON(http.StatusInternalServerError, gin.Error{
+			Err: errors.New("bot not set"),
+		})
+		return
+	}
+	
 	c.JSON(http.StatusInternalServerError, gin.Error{
 		Err: errors.New("not implemented"),
 	})
