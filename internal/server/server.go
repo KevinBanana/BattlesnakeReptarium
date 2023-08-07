@@ -26,11 +26,11 @@ func NewRouter(controller controllers.GameController) *gin.Engine {
 }
 
 func Init() {
+	conf := config.GetConfig()
 	db := repo.Database{}
-	controller := controllers.NewGameController(&db)
+	controller := controllers.NewGameController(&db, conf.ActiveBot)
 	r := NewRouter(controller)
 
-	conf := config.GetConfig()
 	listenAddress := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
 	log.Info(fmt.Sprintf("Listening on %s", listenAddress))
 	log.Fatal(r.Run(listenAddress))

@@ -7,10 +7,10 @@ import (
 )
 
 type Config struct {
-	Host                    string `mapstructure:"host"`
-	Port                    uint16 `mapstructure:"port"`
-	MetricReceiptsProcessed string `mapstructure:"metric_receipts_processed"`
-	LogLevel                string `mapstructure:"log_level"`
+	ActiveBot string `mapstructure:"active_bot"`
+	Host      string `mapstructure:"host"`
+	Port      uint16 `mapstructure:"port"`
+	LogLevel  string `mapstructure:"log_level"`
 }
 
 var parsedConfig Config

@@ -1,1 +1,2 @@
-level: "error"
+active_bot: "banana_bot_v1"
+log_level: "error"
