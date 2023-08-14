@@ -67,39 +67,25 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	var err error
+	var reqBody model.MoveRequestBody
 	// Get the game, turn, board, and self from the request
-	var game model.Game
-	if err = bindBody(ctx, &game); err != nil {
-		return
-	}
-	var turn int
-	if err = bindBody(ctx, &turn); err != nil {
-		return
-	}
-	var board model.Board
-	if err = bindBody(ctx, &board); err != nil {
-		return
-	}
-	var selfSnake model.Snake
-	if err = bindBody(ctx, &selfSnake); err != nil {
+	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
-	snakeMove, err := g.bot.CalculateMove(ctx, game, turn, board, selfSnake)
-	ctx.JSON(http.StatusInternalServerError, gin.Error{
-		Err: errors.New("not implemented"),
+	snakeAction, err := g.bot.CalculateMove(ctx, game, turn, board, selfSnake)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"move":  snakeAction.Move,
+		"shout": snakeAction.Shout,
 	})
 }
 
 func (g GameController) Health(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"time": time.Now()})
-}
-
-func bindBody(ctx *gin.Context, obj interface{}) error {
-	if err := ctx.ShouldBindBodyWith(obj, binding.JSON); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return err
-	}
-	return nil
 }
