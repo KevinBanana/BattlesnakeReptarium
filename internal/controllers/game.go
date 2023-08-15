@@ -47,7 +47,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	var reqBody model.MoveRequestBody
+	var reqBody model.RequestBody
 	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
