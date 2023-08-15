@@ -1,8 +1,8 @@
 package model
 
 type MoveRequestBody struct {
-	Game      Game
-	Turn      int
-	Board     Board
-	SelfSnake Snake
+	Game      Game  `json:"game"`
+	Turn      int   `json:"turn,omitempty"`
+	Board     Board `json:"board"`
+	SelfSnake Snake `json:"you"`
 }
