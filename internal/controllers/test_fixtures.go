@@ -8,7 +8,7 @@ var (
 	board     = model.Board{}
 	selfSnake = model.Snake{}
 
-	defaultMoveRequest = model.MoveRequestBody{
+	defaultRequest = model.RequestBody{
 		Game:      model.Game{},
 		Turn:      1,
 		Board:     model.Board{},

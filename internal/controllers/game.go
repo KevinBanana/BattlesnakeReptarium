@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"BattlesnakeReptarium/internal/model"
-	"BattlesnakeReptarium/internal/repo"
 	"BattlesnakeReptarium/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -15,22 +14,30 @@ import (
 
 type GameController struct {
 	bot           services.Bot
-	gameEngineSvc services.GameEngineSvc
+	gameEngineSvc services.GameEngineService
 }
 
-func NewGameController(db repo.DB, botSvc services.Bot) GameController {
-	gameEngineSvc := services.NewGameEngineSvc(db)
-
+func NewGameController(botSvc services.Bot, gameEngineSvc services.GameEngineService) GameController {
 	return GameController{
 		bot:           botSvc,
-		gameEngineSvc: *gameEngineSvc,
+		gameEngineSvc: gameEngineSvc,
 	}
 }
 
 func (g GameController) StartGame(ctx *gin.Context) {
-	ctx.JSON(http.StatusInternalServerError, gin.Error{
-		Err: errors.New("not implemented"),
-	})
+	var reqBody model.RequestBody
+	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	err := g.gameEngineSvc.StartGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, nil)
 }
 
 func (g GameController) EndGame(ctx *gin.Context) {
@@ -47,7 +54,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	var reqBody model.MoveRequestBody
+	var reqBody model.RequestBody
 	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
