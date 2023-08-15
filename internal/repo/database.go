@@ -19,6 +19,12 @@ type Database struct {
 	games map[string]*model.Game
 }
 
+func NewDatabase() *Database {
+	return &Database{
+		games: make(map[string]*model.Game),
+	}
+}
+
 func (db *Database) CreateGame(ctx context.Context, game model.Game) error {
 	db.Lock()
 	defer db.Unlock()

@@ -32,9 +32,9 @@ func NewRouter(controller controllers.GameController) *gin.Engine {
 
 func Init() {
 	conf := config.GetConfig()
-	db := repo.Database{}
+	db := repo.NewDatabase()
 	botSvc := createSelectedBotService(conf.ActiveBot)
-	gameEngineSvc := services.NewGameEngineSvc(&db)
+	gameEngineSvc := services.NewGameEngineSvc(db)
 	controller := controllers.NewGameController(*botSvc, gameEngineSvc)
 	r := NewRouter(controller)
 
