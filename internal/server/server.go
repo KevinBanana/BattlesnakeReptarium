@@ -34,7 +34,8 @@ func Init() {
 	conf := config.GetConfig()
 	db := repo.Database{}
 	botSvc := createSelectedBotService(conf.ActiveBot)
-	controller := controllers.NewGameController(&db, *botSvc)
+	gameEngineSvc := services.NewGameEngineSvc(&db)
+	controller := controllers.NewGameController(*botSvc, gameEngineSvc)
 	r := NewRouter(controller)
 
 	listenAddress := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
