@@ -3,6 +3,8 @@ package model
 import (
 	"math"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -27,9 +29,29 @@ func TestCoord_GetDistance(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tc.location1.GetDistance(tc.location2)
-			if got != tc.expectedDistance {
-				t.Errorf("Expected %f, got %f", tc.expectedDistance, got)
-			}
+			assert.Equal(t, tc.expectedDistance, got)
+		})
+	}
+}
+
+func TestCoord_GetSquareInDirection(t *testing.T) {
+	tests := []struct {
+		name      string
+		start     Coord
+		direction Direction
+		expected  *Coord
+	}{
+		{"Up", x0y0, UP, &x0y1},
+		{"Down", x0y1, DOWN, &x0y0},
+		{"Left", x1y0, LEFT, &x0y0},
+		{"Right", x0y0, RIGHT, &x1y0},
+		{"Invalid", x0y0, Direction("invalid"), nil},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.start.GetSquareInDirection(tc.direction)
+			assert.Equal(t, tc.expected, got)
 		})
 	}
 }
