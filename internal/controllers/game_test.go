@@ -13,33 +13,92 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGame_Health(t *testing.T) {
+	t.Run("Happy path", func(t *testing.T) {
+		withGameSetup(t, func(b gameTestBundle) {
+			testGameController := NewGameController(&repo.Database{}, nil)
+
+			testGameController.Health(b.ctx)
+			assert.Equal(t, http.StatusOK, b.ctx.Writer.Status())
+		})
+	})
+}
+
 func TestGame_CalculateMove(t *testing.T) {
 	t.Run("Happy path", func(t *testing.T) {
-		moveRequest := model.MoveRequestBody{
-			Game:      model.Game{},
-			Turn:      5,
-			Board:     model.Board{},
-			SelfSnake: model.Snake{},
-		}
-		jsonValue, _ := json.Marshal(moveRequest)
-		req, _ := http.NewRequest("POST", "/move", bytes.NewBuffer(jsonValue))
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
+		withGameSetup(t, func(b gameTestBundle) {
+			moveRequestSetup(b.ctx)
 
-		ctx.Request = req
-		mockCtrl := gomock.NewController(t)
-		mockBot := services.NewMockBot(mockCtrl)
-		mockBot.EXPECT().CalculateMove(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-			model.SnakeAction{}, nil).Times(1)
-		testGameController := NewGameController(&repo.Database{}, mockBot)
+			b.mockBot.EXPECT().CalculateMove(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+				&model.SnakeAction{}, nil).Times(1)
+			testGameController := NewGameController(&repo.Database{}, b.mockBot)
 
-		testGameController.CalculateMove(ctx)
-
-		assert.Equal(t, http.StatusOK, w.Code)
+			testGameController.CalculateMove(b.ctx)
+			assert.Equal(t, http.StatusOK, b.ctx.Writer.Status())
+		})
 	})
 
-	// TODO clean up above test and add more
+	t.Run("Bot not set", func(t *testing.T) {
+		withGameSetup(t, func(b gameTestBundle) {
+			moveRequestSetup(b.ctx)
+
+			testGameController := NewGameController(&repo.Database{}, nil)
+
+			testGameController.CalculateMove(b.ctx)
+			assert.Equal(t, http.StatusInternalServerError, b.ctx.Writer.Status())
+		})
+	})
+
+	t.Run("Bad request", func(t *testing.T) {
+		withGameSetup(t, func(b gameTestBundle) {
+			jsonDefaultMoveRequest, _ := json.Marshal("bad request")
+			b.ctx.Request, _ = http.NewRequest("POST", "/move", bytes.NewBuffer(jsonDefaultMoveRequest))
+
+			b.mockBot.EXPECT().CalculateMove(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+				&model.SnakeAction{}, nil).Times(0)
+			testGameController := NewGameController(&repo.Database{}, b.mockBot)
+
+			testGameController.CalculateMove(b.ctx)
+			assert.Equal(t, http.StatusBadRequest, b.ctx.Writer.Status())
+		})
+	})
+
+	t.Run("Internal service error", func(t *testing.T) {
+		withGameSetup(t, func(b gameTestBundle) {
+			moveRequestSetup(b.ctx)
+
+			b.mockBot.EXPECT().CalculateMove(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+				nil, errors.New("error")).Times(1)
+			testGameController := NewGameController(&repo.Database{}, b.mockBot)
+
+			testGameController.CalculateMove(b.ctx)
+			assert.Equal(t, http.StatusInternalServerError, b.ctx.Writer.Status())
+		})
+	})
+}
+
+func moveRequestSetup(ctx *gin.Context) {
+	jsonDefaultMoveRequest, _ := json.Marshal(defaultMoveRequest)
+	ctx.Request, _ = http.NewRequest("POST", "/move", bytes.NewBuffer(jsonDefaultMoveRequest))
+}
+
+func withGameSetup(t gomock.TestReporter, testFunc func(testBundle gameTestBundle)) {
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	mockCtrl := gomock.NewController(t)
+	mockBot := services.NewMockBot(mockCtrl)
+
+	testFunc(gameTestBundle{
+		ctx:     ctx,
+		mockBot: mockBot,
+	})
+}
+
+type gameTestBundle struct {
+	ctx     *gin.Context
+	mockBot *services.MockBot
 }

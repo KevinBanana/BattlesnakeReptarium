@@ -18,7 +18,7 @@ var (
 
 func TestDatabase_CreateGame(t *testing.T) {
 	t.Run("Happy Path", func(t *testing.T) {
-		WithDBSetup(func(db *Database) {
+		withDBSetup(func(db *Database) {
 			err := db.CreateGame(context.Background(), sampleGame)
 			assert.NoError(t, err)
 		})
@@ -26,7 +26,7 @@ func TestDatabase_CreateGame(t *testing.T) {
 	})
 
 	t.Run("Game Already Exists", func(t *testing.T) {
-		WithDBSetup(func(db *Database) {
+		withDBSetup(func(db *Database) {
 			err := db.CreateGame(context.Background(), sampleGame)
 			require.NoError(t, err)
 			err = db.CreateGame(context.Background(), sampleGame)
@@ -35,7 +35,7 @@ func TestDatabase_CreateGame(t *testing.T) {
 	})
 
 	t.Run("Game ID Cannot Be Empty", func(t *testing.T) {
-		WithDBSetup(func(db *Database) {
+		withDBSetup(func(db *Database) {
 			err := db.CreateGame(context.Background(), model.Game{})
 			assert.Error(t, err)
 		})
@@ -44,7 +44,7 @@ func TestDatabase_CreateGame(t *testing.T) {
 
 func TestDatabase_GetGame(t *testing.T) {
 	t.Run("Happy Path", func(t *testing.T) {
-		WithDBSetup(func(db *Database) {
+		withDBSetup(func(db *Database) {
 			err := db.CreateGame(context.Background(), model.Game{ID: "gameId"})
 			require.NoError(t, err)
 
@@ -55,7 +55,7 @@ func TestDatabase_GetGame(t *testing.T) {
 	})
 
 	t.Run("Game Not Found", func(t *testing.T) {
-		WithDBSetup(func(db *Database) {
+		withDBSetup(func(db *Database) {
 			returnedGame, err := db.GetGame(context.Background(), "nonexistingGame")
 			assert.Error(t, err)
 			assert.Nil(t, returnedGame)
@@ -63,7 +63,7 @@ func TestDatabase_GetGame(t *testing.T) {
 	})
 }
 
-func WithDBSetup(testFunc func(db *Database)) {
+func withDBSetup(testFunc func(db *Database)) {
 	db := Database{
 		games: make(map[string]*model.Game),
 	}

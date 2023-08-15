@@ -36,10 +36,10 @@ func (m *MockBot) EXPECT() *MockBotMockRecorder {
 }
 
 // CalculateMove mocks base method.
-func (m *MockBot) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) (model.SnakeAction, error) {
+func (m *MockBot) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) (*model.SnakeAction, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalculateMove", ctx, game, turn, board, self)
-	ret0, _ := ret[0].(model.SnakeAction)
+	ret0, _ := ret[0].(*model.SnakeAction)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
