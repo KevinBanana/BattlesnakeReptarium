@@ -41,13 +41,23 @@ func TestGame_StartGame(t *testing.T) {
 
 	t.Run("Bad request", func(t *testing.T) {
 		withGameSetup(t, func(b gameTestBundle) {
+			jsonDefaultMoveRequest, _ := json.Marshal("bad request")
+			b.ctx.Request, _ = http.NewRequest("POST", "/start", bytes.NewBuffer(jsonDefaultMoveRequest))
 
+			testGameController := NewGameController(b.mockBot, b.mockGameEngine)
+			testGameController.StartGame(b.ctx)
+			assert.Equal(t, http.StatusBadRequest, b.ctx.Writer.Status())
 		})
 	})
 
 	t.Run("Internal server error", func(t *testing.T) {
 		withGameSetup(t, func(b gameTestBundle) {
+			startRequestSetup(b.ctx)
+			b.mockGameEngine.EXPECT().StartGame(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error")).Times(1)
 
+			testGameController := NewGameController(b.mockBot, b.mockGameEngine)
+			testGameController.StartGame(b.ctx)
+			assert.Equal(t, http.StatusInternalServerError, b.ctx.Writer.Status())
 		})
 	})
 }
