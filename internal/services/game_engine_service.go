@@ -5,6 +5,8 @@ import (
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/repo"
+
+	"github.com/pkg/errors"
 )
 
 type GameEngineService interface {
@@ -23,7 +25,9 @@ func NewGameEngineSvc(db repo.DB) *GameEngineSvc {
 }
 
 func (svc *GameEngineSvc) StartGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error {
-	panic("implement me")
+	if err := svc.db.CreateGame(ctx, game); err != nil {
+		return errors.Wrap(err, "StartGame::failed to create game in DB")
+	}
 	return nil
 }
 
