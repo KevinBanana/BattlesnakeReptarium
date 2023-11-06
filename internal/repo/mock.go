@@ -63,3 +63,17 @@ func (mr *MockDBMockRecorder) GetGame(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGame", reflect.TypeOf((*MockDB)(nil).GetGame), ctx, id)
 }
+
+// UpdateGame mocks base method.
+func (m *MockDB) UpdateGame(ctx context.Context, game model.Game) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateGame", ctx, game)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateGame indicates an expected call of UpdateGame.
+func (mr *MockDBMockRecorder) UpdateGame(ctx, game interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGame", reflect.TypeOf((*MockDB)(nil).UpdateGame), ctx, game)
+}
