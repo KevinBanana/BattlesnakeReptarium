@@ -5,13 +5,14 @@ import (
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/repo"
+	"BattlesnakeReptarium/internal/util"
 
 	"github.com/pkg/errors"
 )
 
 type GameEngineService interface {
 	StartGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error
-	EndGame(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) error
+	EndGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error
 }
 
 type GameEngineSvc struct {
@@ -31,7 +32,12 @@ func (svc *GameEngineSvc) StartGame(ctx context.Context, game model.Game, board 
 	return nil
 }
 
-func (svc *GameEngineSvc) EndGame(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) error {
-	panic("implement me")
+func (svc *GameEngineSvc) EndGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error {
+	game.IsFinished = true
+	game.IsWin = util.IsSnakeOnBoard(self, board)
+
+	if err := svc.db.UpdateGame(ctx, game); err != nil {
+		return errors.Wrap(err, "EndGame::failed to update game in DB")
+	}
 	return nil
 }

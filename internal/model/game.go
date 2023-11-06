@@ -6,4 +6,7 @@ type Game struct {
 	Map     string  `json:"map"`
 	Timeout int     `json:"timeout"`
 	Source  string  `json:"source"`
+
+	IsFinished bool `json:"isFinished"`
+	IsWin      bool `json:"isWin"`
 }

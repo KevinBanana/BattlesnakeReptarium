@@ -41,9 +41,19 @@ func (g GameController) StartGame(ctx *gin.Context) {
 }
 
 func (g GameController) EndGame(ctx *gin.Context) {
-	ctx.JSON(http.StatusInternalServerError, gin.Error{
-		Err: errors.New("not implemented"),
-	})
+	var reqBody model.RequestBody
+	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	err := g.gameEngineSvc.EndGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, nil)
 }
 
 func (g GameController) CalculateMove(ctx *gin.Context) {

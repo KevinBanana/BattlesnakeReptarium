@@ -31,7 +31,21 @@ func TestGameEngineSvc_StartGame(t *testing.T) {
 }
 
 func TestGameEngineSvc_EndGame(t *testing.T) {
+	t.Run("Happy path", func(t *testing.T) {
+		withGameEngineSetup(t, func(b gameEngineTestBundle) {
+			b.mockDB.EXPECT().UpdateGame(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			err := b.gameEngineSvc.EndGame(context.TODO(), model.Game{}, model.Board{}, model.Snake{})
+			assert.NoError(t, err)
+		})
+	})
 
+	t.Run("Failed to save", func(t *testing.T) {
+		withGameEngineSetup(t, func(b gameEngineTestBundle) {
+			b.mockDB.EXPECT().UpdateGame(gomock.Any(), gomock.Any()).Return(errors.New("err")).Times(1)
+			err := b.gameEngineSvc.EndGame(context.TODO(), model.Game{}, model.Board{}, model.Snake{})
+			assert.Error(t, err)
+		})
+	})
 }
 
 func withGameEngineSetup(t gomock.TestReporter, testFunc func(b gameEngineTestBundle)) {

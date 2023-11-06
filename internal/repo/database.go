@@ -12,6 +12,7 @@ import (
 type DB interface {
 	CreateGame(ctx context.Context, game model.Game) error
 	GetGame(ctx context.Context, id string) (*model.Game, error)
+	UpdateGame(ctx context.Context, game model.Game) error
 }
 
 type Database struct {
@@ -45,4 +46,16 @@ func (db *Database) GetGame(ctx context.Context, id string) (*model.Game, error)
 		return nil, errors.New("game not found")
 	}
 	return retrievedGame, nil
+}
+
+func (db *Database) UpdateGame(ctx context.Context, game model.Game) error {
+	db.Lock()
+	defer db.Unlock()
+
+	if _, ok := db.games[game.ID]; !ok {
+		return errors.New("game not found")
+	}
+
+	db.games[game.ID] = &game
+	return nil
 }
