@@ -1,3 +1,4 @@
 
 config/local.yml
 infrastructure/.terraform/
+infrastructure/.terraform.tfstate.lock.info
