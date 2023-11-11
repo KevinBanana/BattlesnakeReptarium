@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.66.0"
+      version = "~> 5.25.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -11,10 +11,6 @@ terraform {
     archive = {
       source  = "hashicorp/archive"
       version = "~> 2.3.0"
-    }
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 3.0"
     }
   }
 
