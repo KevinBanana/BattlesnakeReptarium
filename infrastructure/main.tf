@@ -16,12 +16,19 @@ resource "aws_elastic_beanstalk_application" "battlesnake" {
 resource "aws_elastic_beanstalk_environment" "preprod_env" {
   name                = "preprod-battlesnake"
   application         = aws_elastic_beanstalk_application.battlesnake.name
-  solution_stack_name = "64bit Amazon Linux 2 v3.8.2 running Go 1"
+  solution_stack_name = "64bit Amazon Linux 2023 v4.0.0 running Go 1"
+
 
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "IamInstanceProfile"
-    value     = aws_iam_instance_profile.beanstalk_iam_instance_profile.name
+    value     = aws_iam_instance_profile.battlesnake-ec2-iam-instance-profile.name
+  }
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "DisableIMDSv1"
+    value     = "true"
   }
 
   setting {
@@ -34,5 +41,17 @@ resource "aws_elastic_beanstalk_environment" "preprod_env" {
     namespace = "aws:elasticbeanstalk:application:environment"
     name      = "PORT"
     value     = "8080"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:environment"
+    name      = "EnvironmentType"
+    value     = "SingleInstance"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:environment"
+    name      = "ServiceRole"
+    value     = "AWSServiceRoleForElasticBeanstalk"
   }
 }
