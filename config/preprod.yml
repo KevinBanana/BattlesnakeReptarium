@@ -1,2 +1,5 @@
-active_bot: "banana_bot_v1"
+active_bot: "bananatron_v1"
 log_level: "info"
+garage_bots: [
+  "banana_bot_v1"
+]
