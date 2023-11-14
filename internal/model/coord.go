@@ -6,15 +6,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Direction string
-
-const (
-	UP    Direction = "up"
-	DOWN  Direction = "down"
-	LEFT  Direction = "left"
-	RIGHT Direction = "right"
-)
-
 type Coord struct {
 	X int `json:"x"`
 	Y int `json:"y"`
@@ -39,7 +30,7 @@ func (c Coord) GetSquareInDirection(direction Direction) *Coord {
 	case RIGHT:
 		return &Coord{X: c.X + 1, Y: c.Y}
 	default:
-		log.Error("Invalid direction")
+		log.Error("Invalid Direction")
 		return nil
 	}
 }

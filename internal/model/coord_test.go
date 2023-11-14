@@ -41,10 +41,10 @@ func TestCoord_GetSquareInDirection(t *testing.T) {
 		direction Direction
 		expected  *Coord
 	}{
-		{"Up", x0y0, UP, &x0y1},
-		{"Down", x0y1, DOWN, &x0y0},
-		{"Left", x1y0, LEFT, &x0y0},
-		{"Right", x0y0, RIGHT, &x1y0},
+		{"UP", x0y0, UP, &x0y1},
+		{"DOWN", x0y1, DOWN, &x0y0},
+		{"LEFT", x1y0, LEFT, &x0y0},
+		{"RIGHT", x0y0, RIGHT, &x1y0},
 		{"Invalid", x0y0, Direction("invalid"), nil},
 	}
 

@@ -1,12 +1,12 @@
 package model
 
-type direction string
+type Direction string
 
 const (
-	Up    direction = "up"
-	Down  direction = "down"
-	Left  direction = "left"
-	Right direction = "right"
+	UP    Direction = "up"
+	DOWN  Direction = "down"
+	LEFT  Direction = "left"
+	RIGHT Direction = "right"
 )
 
 type Snake struct {
@@ -29,6 +29,6 @@ type SnakeCustomizations struct {
 }
 
 type SnakeAction struct {
-	Move  direction `json:"move"`
+	Move  Direction `json:"move"`
 	Shout string    `json:"shout"`
 }
