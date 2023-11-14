@@ -69,7 +69,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	snakeAction, err := g.bot.CalculateMove(ctx, game, turn, board, selfSnake)
+	snakeAction, err := g.bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
 		return
