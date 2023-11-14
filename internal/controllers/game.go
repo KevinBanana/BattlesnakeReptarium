@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"time"
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/services"
@@ -83,5 +82,11 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 }
 
 func (g GameController) Health(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"time": time.Now()})
+	ctx.JSON(http.StatusOK, gin.H{
+		"apiversion": "1",
+		"author":     "Kevin Bonanno",
+		"color":      "#e8f007",
+		"head":       "fang",
+		"tail":       "round-bum",
+	})
 }
