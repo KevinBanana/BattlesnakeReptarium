@@ -10,3 +10,22 @@ func IsSnakeOnBoard(snake model.Snake, board model.Board) bool {
 	}
 	return false
 }
+
+func calculateMovesDistance(a, b model.Coord) int {
+	xMoves := 0
+	yMoves := 0
+
+	if a.X > b.X {
+		xMoves = a.X - b.X
+	} else {
+		xMoves = b.X - a.X
+	}
+
+	if a.Y > b.Y {
+		yMoves = a.Y - b.Y
+	} else {
+		yMoves = b.Y - a.Y
+	}
+
+	return xMoves + yMoves
+}

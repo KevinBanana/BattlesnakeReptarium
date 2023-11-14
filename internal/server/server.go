@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	bananaBotV1 = "banana_bot_v1"
+	bananaBotV1  = "banana_bot_v1"
+	bananatronV1 = "bananatron_v1"
 )
 
 func NewRouter(controller controllers.GameController) *gin.Engine {
@@ -49,6 +50,8 @@ func createSelectedBotService(activeBot string) *services.Bot {
 	switch activeBot {
 	case bananaBotV1:
 		botSvc = services.NewBananaBotV1Svc()
+	case bananatronV1:
+		botSvc = services.NewBananatronV1Svc()
 	default:
 		log.Errorf("Cannot set active bot: '%s' not found", activeBot)
 		return nil

@@ -26,3 +26,25 @@ func TestIsSnakeOnBoard(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateMovesDistance(t *testing.T) {
+	test := []struct {
+		name   string
+		a      model.Coord
+		b      model.Coord
+		expect int
+	}{
+		{"Horizontal only", model.Coord{X: 1, Y: 1}, model.Coord{X: 5, Y: 1}, 4},
+		{"Horizontal only, negative", model.Coord{X: 5, Y: 1}, model.Coord{X: 1, Y: 1}, 4},
+		{"Vertical only", model.Coord{X: 1, Y: 1}, model.Coord{X: 1, Y: 5}, 4},
+		{"Vertical only, negative", model.Coord{X: 1, Y: 5}, model.Coord{X: 1, Y: 1}, 4},
+		{"Horizontal and vertical", model.Coord{X: 1, Y: 1}, model.Coord{X: 5, Y: 5}, 8},
+		{"Horizontal and vertical, negative", model.Coord{X: 5, Y: 5}, model.Coord{X: 1, Y: 1}, 8},
+		{"Same coord", model.Coord{X: 1, Y: 1}, model.Coord{X: 1, Y: 1}, 0},
+	}
+	for _, tt := range test {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expect, calculateMovesDistance(tt.a, tt.b))
+		})
+	}
+}
