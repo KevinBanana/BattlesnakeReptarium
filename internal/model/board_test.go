@@ -6,6 +6,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestIsSnakeOnBoard(t *testing.T) {
+	tests := []struct {
+		name   string
+		snake  Snake
+		board  Board
+		expect bool
+	}{
+		{"Snake is on board", Snake{ID: "snake1"}, Board{Snakes: []Snake{{ID: "someSnake"}, {ID: "snake1"}}}, true},
+		{"Snake is not on board", Snake{ID: "snake2"}, Board{Snakes: []Snake{{ID: "someSnake"}, {ID: "snake1"}}}, false},
+		{"Snake has no ID", Snake{}, Board{Snakes: []Snake{{ID: "snake1"}}}, false},
+		{"Board has no snakes", Snake{ID: "snake1"}, Board{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expect, tt.board.IsSnakeOnBoard(tt.snake))
+		})
+	}
+}
+
 func TestIsCoordClear(t *testing.T) {
 	tests := []struct {
 		name   string

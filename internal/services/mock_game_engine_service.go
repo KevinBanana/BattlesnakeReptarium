@@ -36,17 +36,17 @@ func (m *MockGameEngineService) EXPECT() *MockGameEngineServiceMockRecorder {
 }
 
 // EndGame mocks base method.
-func (m *MockGameEngineService) EndGame(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) error {
+func (m *MockGameEngineService) EndGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EndGame", ctx, game, turn, board, self)
+	ret := m.ctrl.Call(m, "EndGame", ctx, game, board, self)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // EndGame indicates an expected call of EndGame.
-func (mr *MockGameEngineServiceMockRecorder) EndGame(ctx, game, turn, board, self interface{}) *gomock.Call {
+func (mr *MockGameEngineServiceMockRecorder) EndGame(ctx, game, board, self interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndGame", reflect.TypeOf((*MockGameEngineService)(nil).EndGame), ctx, game, turn, board, self)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndGame", reflect.TypeOf((*MockGameEngineService)(nil).EndGame), ctx, game, board, self)
 }
 
 // StartGame mocks base method.
