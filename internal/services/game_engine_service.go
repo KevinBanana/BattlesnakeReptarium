@@ -5,7 +5,6 @@ import (
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/repo"
-	"BattlesnakeReptarium/internal/util"
 
 	"github.com/pkg/errors"
 )
@@ -34,7 +33,7 @@ func (svc *GameEngineSvc) StartGame(ctx context.Context, game model.Game, board 
 
 func (svc *GameEngineSvc) EndGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error {
 	game.IsFinished = true
-	game.IsWin = util.IsSnakeOnBoard(self, board)
+	game.IsWin = board.IsSnakeOnBoard(self)
 
 	if err := svc.db.UpdateGame(ctx, game); err != nil {
 		return errors.Wrap(err, "EndGame::failed to update game in DB")

@@ -55,3 +55,25 @@ func TestCoord_GetSquareInDirection(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateMovesDistance(t *testing.T) {
+	test := []struct {
+		name   string
+		a      Coord
+		b      Coord
+		expect int
+	}{
+		{"Horizontal only", Coord{X: 1, Y: 1}, Coord{X: 5, Y: 1}, 4},
+		{"Horizontal only, negative", Coord{X: 5, Y: 1}, Coord{X: 1, Y: 1}, 4},
+		{"Vertical only", Coord{X: 1, Y: 1}, Coord{X: 1, Y: 5}, 4},
+		{"Vertical only, negative", Coord{X: 1, Y: 5}, Coord{X: 1, Y: 1}, 4},
+		{"Horizontal and vertical", Coord{X: 1, Y: 1}, Coord{X: 5, Y: 5}, 8},
+		{"Horizontal and vertical, negative", Coord{X: 5, Y: 5}, Coord{X: 1, Y: 1}, 8},
+		{"Same coord", Coord{X: 1, Y: 1}, Coord{X: 1, Y: 1}, 0},
+	}
+	for _, tt := range test {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expect, tt.a.CalculateMovesDistance(tt.b))
+		})
+	}
+}

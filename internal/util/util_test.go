@@ -8,43 +8,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsSnakeOnBoard(t *testing.T) {
-	tests := []struct {
-		name   string
-		snake  model.Snake
-		board  model.Board
-		expect bool
-	}{
-		{"Snake is on board", model.Snake{ID: "snake1"}, model.Board{Snakes: []model.Snake{{ID: "someSnake"}, {ID: "snake1"}}}, true},
-		{"Snake is not on board", model.Snake{ID: "snake2"}, model.Board{Snakes: []model.Snake{{ID: "someSnake"}, {ID: "snake1"}}}, false},
-		{"Snake has no ID", model.Snake{}, model.Board{Snakes: []model.Snake{{ID: "snake1"}}}, false},
-		{"Board has no snakes", model.Snake{ID: "snake1"}, model.Board{}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expect, IsSnakeOnBoard(tt.snake, tt.board))
-		})
-	}
-}
+func TestContains(t *testing.T) {
+	t.Run("Int slice contains target", func(t *testing.T) {
+		slice := []int{1, 2, 3}
+		target := 2
+		assert.True(t, Contains(slice, target))
+	})
 
-func TestCalculateMovesDistance(t *testing.T) {
-	test := []struct {
-		name   string
-		a      model.Coord
-		b      model.Coord
-		expect int
-	}{
-		{"Horizontal only", model.Coord{X: 1, Y: 1}, model.Coord{X: 5, Y: 1}, 4},
-		{"Horizontal only, negative", model.Coord{X: 5, Y: 1}, model.Coord{X: 1, Y: 1}, 4},
-		{"Vertical only", model.Coord{X: 1, Y: 1}, model.Coord{X: 1, Y: 5}, 4},
-		{"Vertical only, negative", model.Coord{X: 1, Y: 5}, model.Coord{X: 1, Y: 1}, 4},
-		{"Horizontal and vertical", model.Coord{X: 1, Y: 1}, model.Coord{X: 5, Y: 5}, 8},
-		{"Horizontal and vertical, negative", model.Coord{X: 5, Y: 5}, model.Coord{X: 1, Y: 1}, 8},
-		{"Same coord", model.Coord{X: 1, Y: 1}, model.Coord{X: 1, Y: 1}, 0},
-	}
-	for _, tt := range test {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expect, calculateMovesDistance(tt.a, tt.b))
-		})
-	}
+	t.Run("Int slice does not contain target", func(t *testing.T) {
+		slice := []int{1, 2, 3}
+		target := 4
+		assert.False(t, Contains(slice, target))
+	})
+
+	t.Run("Coord slice contains target", func(t *testing.T) {
+		slice := []model.Coord{{X: 1, Y: 1}, {X: 2, Y: 2}}
+		target := model.Coord{X: 1, Y: 1}
+		assert.True(t, Contains(slice, target))
+	})
+
+	t.Run("Coord slice does not contain target", func(t *testing.T) {
+		slice := []model.Coord{{X: 1, Y: 1}, {X: 2, Y: 2}}
+		target := model.Coord{X: 3, Y: 3}
+		assert.False(t, Contains(slice, target))
+	})
 }

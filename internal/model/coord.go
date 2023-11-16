@@ -34,3 +34,22 @@ func (c Coord) GetSquareInDirection(direction Direction) *Coord {
 		return nil
 	}
 }
+
+func (c Coord) CalculateMovesDistance(target Coord) int {
+	xMoves := 0
+	yMoves := 0
+
+	if c.X > target.X {
+		xMoves = c.X - target.X
+	} else {
+		xMoves = target.X - c.X
+	}
+
+	if c.Y > target.Y {
+		yMoves = c.Y - target.Y
+	} else {
+		yMoves = target.Y - c.Y
+	}
+
+	return xMoves + yMoves
+}
