@@ -13,8 +13,8 @@ resource "aws_elastic_beanstalk_application" "battlesnake" {
   description = "All battlesnake environments"
 }
 
-resource "aws_elastic_beanstalk_environment" "preprod_env" {
-  name                = "preprod-battlesnake"
+resource "aws_elastic_beanstalk_environment" "prod_env" {
+  name                = "prod-battlesnake"
   application         = aws_elastic_beanstalk_application.battlesnake.name
   solution_stack_name = "64bit Amazon Linux 2023 v4.0.0 running Go 1"
 
@@ -34,7 +34,7 @@ resource "aws_elastic_beanstalk_environment" "preprod_env" {
   setting {
     namespace = "aws:elasticbeanstalk:application:environment"
     name      = "ENVIRONMENT"
-    value     = "preprod"
+    value     = "prod"
   }
 
   setting {
