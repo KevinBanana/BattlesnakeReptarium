@@ -41,9 +41,19 @@ func TestExcludeCoordsAnySnakeIsHeadingFor(t *testing.T) {
 	t.Run("no snakes", func(t *testing.T) {
 		options := []model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}
 		board := model.Board{Height: 10, Width: 10}
-		selfSnake := model.Snake{Head: model.Coord{X: 5, Y: 5}}
+		selfSnake := model.Snake{Head: model.Coord{X: 5, Y: 5}, ID: "self"}
 		if got := excludeCoordsAnySnakeIsHeadingFor(options, selfSnake, board); !reflect.DeepEqual(got, options) {
 			t.Errorf("excludeCoordsAnySnakeIsHeadingFor() = %v, want %v", got, options)
+		}
+	})
+
+	t.Run("Avoid head on collision", func(t *testing.T) {
+		options := []model.Direction{model.LEFT, model.DOWN}
+		selfSnake := model.Snake{Head: model.Coord{X: 2, Y: 10}, ID: "self"}
+		board := model.Board{Height: 11, Width: 11, Snakes: []model.Snake{snakeHeadingTox1y10, selfSnake}}
+		want := []model.Direction{model.DOWN}
+		if got := excludeCoordsAnySnakeIsHeadingFor(options, selfSnake, board); !reflect.DeepEqual(got, want) {
+			t.Errorf("excludeCoordsAnySnakeIsHeadingFor() = %v, want %v", got, want)
 		}
 	})
 }

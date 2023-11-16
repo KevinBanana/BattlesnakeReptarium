@@ -68,9 +68,9 @@ func excludeCoordsAnySnakeIsHeadingFor(options []model.Direction, selfSnake mode
 			continue
 		}
 		snakeTravelDirection := snake.FindSnakeTravelDirection()
-		nextOccupiedSquare := snake.Head.GetSquareInDirection(snakeTravelDirection)
-		if nextOccupiedSquare != nil {
-			futureOccupiedCoords = append(futureOccupiedCoords, *nextOccupiedSquare)
+		nextOccupiedCoord := snake.Head.GetSquareInDirection(snakeTravelDirection)
+		if nextOccupiedCoord != nil {
+			futureOccupiedCoords = append(futureOccupiedCoords, *nextOccupiedCoord)
 		}
 	}
 

@@ -3,8 +3,16 @@ package services
 import "BattlesnakeReptarium/internal/model"
 
 var (
-	snakeHeadingDown  = model.Snake{Head: model.Coord{X: 5, Y: 5}, Body: []model.Coord{{X: 5, Y: 6}, {X: 5, Y: 7}}}
-	snakeHeadingUp    = model.Snake{Head: model.Coord{X: 5, Y: 5}, Body: []model.Coord{{X: 5, Y: 4}, {X: 5, Y: 3}}}
-	snakeHeadingLeft  = model.Snake{Head: model.Coord{X: 5, Y: 5}, Body: []model.Coord{{X: 6, Y: 5}, {X: 7, Y: 5}}}
-	snakeHeadingRight = model.Snake{Head: model.Coord{X: 5, Y: 5}, Body: []model.Coord{{X: 4, Y: 5}, {X: 3, Y: 5}}}
+	snakeHeadingTox1y10 = model.Snake{
+		ID:             "test-snake-1",
+		Name:           "test-snake-1",
+		Health:         100,
+		Body:           []model.Coord{{X: 1, Y: 8}, {X: 1, Y: 7}},
+		Head:           model.Coord{X: 1, Y: 9},
+		Length:         0,
+		Latency:        "",
+		Shout:          "",
+		Squad:          "",
+		Customizations: model.SnakeCustomizations{},
+	}
 )
