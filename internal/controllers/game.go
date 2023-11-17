@@ -70,7 +70,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	log.Info("move request received: ", reqBody)
+	log.WithField("reqBody", reqBody).Info("move request received")
 
 	snakeAction, err := g.bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
@@ -78,7 +78,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	log.Info("move response: ", snakeAction)
+	log.WithField("move response", snakeAction)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"move":  snakeAction.Move,
