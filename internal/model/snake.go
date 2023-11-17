@@ -39,7 +39,10 @@ func (s Snake) FindSnakeTravelDirection() Direction {
 	// TODO handle case where snake is only one segment long, so it only has a head
 	// TODO the first element in body array is head, look at index [1] instead
 	// Find which direction the head is in from the first body segment
-	body := s.Body[0]
+	if len(s.Body) <= 1 { // Snake is only a head
+		return ""
+	}
+	body := s.Body[1]
 	if s.Head == *body.GetSquareInDirection(UP) {
 		return UP
 	}
