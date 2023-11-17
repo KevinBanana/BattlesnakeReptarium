@@ -21,3 +21,12 @@ resource "aws_iam_role" "role" {
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
+
+resource "aws_iam_role_policy_attachment" "battlesnake-ec2-iam-role-policy-attachment" {
+  role       = aws_iam_role.role.name
+  policy_arn = data.aws_iam_policy.AWSElasticBeanstalkWebTier.arn
+}
+
+data "aws_iam_policy" "AWSElasticBeanstalkWebTier" {
+  arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier"
+}

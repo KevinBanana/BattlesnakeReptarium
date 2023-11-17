@@ -9,8 +9,8 @@ import (
 type Config struct {
 	ActiveBot string `mapstructure:"active_bot"`
 	Host      string `mapstructure:"host"`
-	Port      uint16 `mapstructure:"port"`
 	LogLevel  string `mapstructure:"log_level"`
+	Port      uint16 `mapstructure:"port"`
 }
 
 var parsedConfig Config

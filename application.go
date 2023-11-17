@@ -26,6 +26,7 @@ func main() {
 	log.Info(fmt.Sprintf("Starting application in %s environment", env))
 	config.Init(env)
 	logging.SetLogLevel(config.GetConfig().LogLevel)
+	log.SetFormatter(&log.JSONFormatter{})
 
 	server.Init()
 }

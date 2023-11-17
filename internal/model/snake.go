@@ -36,6 +36,8 @@ type SnakeAction struct {
 // FindSnakeTravelDirection returns the direction a snake last moved in
 // It does this by determining where the head of the snake is in relation to the first body segment
 func (s Snake) FindSnakeTravelDirection() Direction {
+	// TODO handle case where snake is only one segment long, so it only has a head
+	// TODO the first element in body array is head, look at index [1] instead
 	// Find which direction the head is in from the first body segment
 	body := s.Body[0]
 	if s.Head == *body.GetSquareInDirection(UP) {
