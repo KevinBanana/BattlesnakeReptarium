@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type GameController struct {
@@ -69,11 +70,15 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
+	log.Info("move request received: ", reqBody)
+
 	snakeAction, err := g.bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
 		return
 	}
+
+	log.Info("move response: ", snakeAction)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"move":  snakeAction.Move,
