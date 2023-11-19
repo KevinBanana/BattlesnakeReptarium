@@ -16,6 +16,8 @@ func NewBananatronSvc() *BananatronV1Svc {
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	// Begin with all move options and filter out invalid moves
 	options := []model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}
+	// TODO create a weight-based system for giving each option a score, and pick the highest score
+	// TODO consider when an enemy snake only has one option
 
 	options = excludeOccupiedCoordsFromOptions(options, selfSnake.Head, board)
 	if len(options) == 1 {
