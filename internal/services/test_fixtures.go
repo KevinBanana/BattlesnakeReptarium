@@ -9,10 +9,10 @@ var (
 		Health:         100,
 		Body:           []model.Coord{{X: 1, Y: 9}, {X: 1, Y: 8}, {X: 1, Y: 7}},
 		Head:           model.Coord{X: 1, Y: 9},
-		Length:         0,
-		Latency:        "",
-		Shout:          "",
-		Squad:          "",
+		Length:         3,
+		Latency:        "100",
+		Shout:          "test",
+		Squad:          "team-1",
 		Customizations: model.SnakeCustomizations{},
 	}
 )
