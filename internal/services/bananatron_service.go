@@ -23,8 +23,16 @@ const (
 	CollisionCoursePenalty = 15
 )
 
+var (
+	directions = []model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}
+)
+
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
-	weightedOptions := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+	weightedOptions := map[model.Direction]float64{}
+	for _, direction := range directions {
+		weightedOptions[direction] = 0
+	}
+
 	wg := new(sync.WaitGroup)
 
 	// TODO consider when an enemy snake only has one option
@@ -60,9 +68,7 @@ func determineSnakeAction(weightedOptions map[model.Direction]float64) *model.Sn
 func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
 	defer wg.Done()
 
-	svc.mux.RLock()
-	defer svc.mux.RUnlock()
-	for direction, _ := range *weightedOptions {
+	for _, direction := range directions {
 		targetSquare := selfHead.GetSquareInDirection(direction)
 		if !board.IsCoordClear(*targetSquare) {
 			// Coord is occupied, penalize option
@@ -93,9 +99,7 @@ func (svc *BananatronV1Svc) adjustWeightsForCollisionCourse(wg *sync.WaitGroup, 
 		}
 	}
 
-	svc.mux.RLock()
-	defer svc.mux.RUnlock()
-	for direction, _ := range *weightedOptions {
+	for _, direction := range directions {
 		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is a collision course coord, penalize option
