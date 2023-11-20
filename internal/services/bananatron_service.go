@@ -16,6 +16,11 @@ func NewBananatronSvc() *BananatronV1Svc {
 	return &BananatronV1Svc{}
 }
 
+const (
+	OccupiedSquarePenalty  = 9999
+	CollisionCoursePenalty = 15
+)
+
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	weightedOptions := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
 	wg := new(sync.WaitGroup)
@@ -25,7 +30,8 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 	wg.Add(1)
 	go svc.adjustWeightsForOccupiedSquares(wg, &weightedOptions, selfSnake.Head, board)
 
-	//options = excludeCoordsAnySnakeIsHeadingFor(options, selfSnake, board)
+	wg.Add(1)
+	go svc.adjustWeightsForCollisionCourse(wg, &weightedOptions, selfSnake, board)
 
 	// Return the highest weighted option
 	// TODO
@@ -33,24 +39,28 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 	return &model.SnakeAction{Move: model.UP}, nil
 }
 
-func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, options *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
+func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
 	defer wg.Done()
 
-	for direction, _ := range *options {
+	for direction, _ := range *weightedOptions {
 		targetSquare := selfHead.GetSquareInDirection(direction)
 		if !board.IsCoordClear(*targetSquare) {
 			// Coord is occupied, penalize option
 			svc.mux.Lock()
-			(*options)[direction] -= 100
+			(*weightedOptions)[direction] -= OccupiedSquarePenalty
 			svc.mux.Unlock()
 		}
 	}
 
 }
 
-func excludeCoordsAnySnakeIsHeadingFor(options []model.Direction, selfSnake model.Snake, board model.Board) []model.Direction {
-	var filteredOptions []model.Direction
-	var futureOccupiedCoords []model.Coord // An estimate based on where enemy snakes are heading if they go straight
+// adjustWeightsForCollisionCourse a collision course is when an enemy snake is heading straight and its next coord
+// is one that our snake may move to. In this case, that coord should be penalized, but not forbidden since
+// it is not guaranteed the enemy will continue straight.
+func (svc *BananatronV1Svc) adjustWeightsForCollisionCourse(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board) {
+	defer wg.Done()
+
+	var nextOccupiedCoords []model.Coord
 	for _, snake := range board.Snakes {
 		// Exclude self
 		if snake.ID == selfSnake.ID {
@@ -59,16 +69,17 @@ func excludeCoordsAnySnakeIsHeadingFor(options []model.Direction, selfSnake mode
 		snakeTravelDirection := snake.FindSnakeTravelDirection()
 		nextOccupiedCoord := snake.Head.GetSquareInDirection(snakeTravelDirection)
 		if nextOccupiedCoord != nil {
-			futureOccupiedCoords = append(futureOccupiedCoords, *nextOccupiedCoord)
+			nextOccupiedCoords = append(nextOccupiedCoords, *nextOccupiedCoord)
 		}
 	}
 
-	for _, move := range options {
-		targetSquare := selfSnake.Head.GetSquareInDirection(move)
-		if !util.Contains(futureOccupiedCoords, *targetSquare) {
-			filteredOptions = append(filteredOptions, move)
+	for direction, _ := range *weightedOptions {
+		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
+		if util.Contains(nextOccupiedCoords, *targetSquare) {
+			// Coord is a collision course coord, penalize option
+			svc.mux.Lock()
+			(*weightedOptions)[direction] -= CollisionCoursePenalty
+			svc.mux.Unlock()
 		}
 	}
-
-	return filteredOptions
 }
