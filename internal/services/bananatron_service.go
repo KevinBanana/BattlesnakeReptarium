@@ -60,6 +60,8 @@ func determineSnakeAction(weightedOptions map[model.Direction]float64) *model.Sn
 func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
 	defer wg.Done()
 
+	svc.mux.RLock()
+	defer svc.mux.RUnlock()
 	for direction, _ := range *weightedOptions {
 		targetSquare := selfHead.GetSquareInDirection(direction)
 		if !board.IsCoordClear(*targetSquare) {
@@ -91,6 +93,8 @@ func (svc *BananatronV1Svc) adjustWeightsForCollisionCourse(wg *sync.WaitGroup, 
 		}
 	}
 
+	svc.mux.RLock()
+	defer svc.mux.RUnlock()
 	for direction, _ := range *weightedOptions {
 		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
