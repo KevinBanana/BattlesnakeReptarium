@@ -38,7 +38,7 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 
 	// Get the highest weighted option
 	var highestWeightedDirection model.Direction
-	var highestWeight float64
+	highestWeight := weightedOptions[model.UP]
 	for direction, weight := range weightedOptions {
 		if weight > highestWeight {
 			highestWeightedDirection = direction
