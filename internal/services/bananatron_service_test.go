@@ -2,36 +2,42 @@ package services
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 
 	"BattlesnakeReptarium/internal/model"
 )
 
-func TestExcludeOccupiedSquaresFromOptions(t *testing.T) {
-	options := []model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}
+func TestAdjustWeightsForOccupiedSquares(t *testing.T) {
+	svc := NewBananatronSvc()
+	wg := new(sync.WaitGroup)
+
 	tests := []struct {
 		name     string
 		selfHead model.Coord
 		board    model.Board
-		want     []model.Direction
+		want     map[model.Direction]float64
 	}{
 		{"no snakes, bottom left coord", model.Coord{X: 0, Y: 0}, model.Board{Height: 10, Width: 10},
-			[]model.Direction{model.UP, model.RIGHT}},
+			map[model.Direction]float64{model.UP: 0, model.LEFT: -100, model.DOWN: -100, model.RIGHT: 0}},
 		{"no snakes, top right coord", model.Coord{X: 9, Y: 9}, model.Board{Height: 10, Width: 10},
-			[]model.Direction{model.LEFT, model.DOWN}},
+			map[model.Direction]float64{model.UP: -100, model.LEFT: 0, model.DOWN: 0, model.RIGHT: -100}},
 		{"no snakes, middle coord", model.Coord{X: 5, Y: 5}, model.Board{Height: 10, Width: 10},
-			[]model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}},
+			map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}},
 		{"snake to the left", model.Coord{X: 5, Y: 5}, model.Board{Height: 10, Width: 10, Snakes: []model.Snake{
-			{Body: []model.Coord{{X: 4, Y: 5}}}}}, []model.Direction{model.UP, model.DOWN, model.RIGHT}},
+			{Body: []model.Coord{{X: 4, Y: 5}}}}}, map[model.Direction]float64{model.UP: 0, model.LEFT: -100, model.DOWN: 0, model.RIGHT: 0}},
 		{"snake head to the left", model.Coord{X: 5, Y: 5}, model.Board{Height: 10, Width: 10, Snakes: []model.Snake{
-			{Head: model.Coord{X: 4, Y: 5}}}}, []model.Direction{model.UP, model.DOWN, model.RIGHT}},
+			{Head: model.Coord{X: 4, Y: 5}}}}, map[model.Direction]float64{model.UP: 0, model.LEFT: -100, model.DOWN: 0, model.RIGHT: 0}},
 		{"No exclusions", model.Coord{X: 5, Y: 5}, model.Board{Height: 10, Width: 10},
-			[]model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}},
+			map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := excludeOccupiedCoordsFromOptions(options, tt.selfHead, tt.board); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("excludeOccupiedCoordsFromOptions() = %v, want %v", got, tt.want)
+			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+			wg.Add(1)
+			svc.adjustWeightsForOccupiedSquares(wg, &options, tt.selfHead, tt.board)
+			if !reflect.DeepEqual(options, tt.want) {
+				t.Errorf("adjustWeightsForOccupiedSquares() = %v, want %v", options, tt.want)
 			}
 		})
 	}

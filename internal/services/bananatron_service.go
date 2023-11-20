@@ -2,63 +2,50 @@ package services
 
 import (
 	"context"
+	"sync"
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/util"
 )
 
-type BananatronV1Svc struct{}
+type BananatronV1Svc struct {
+	mux sync.RWMutex
+}
 
 func NewBananatronSvc() *BananatronV1Svc {
 	return &BananatronV1Svc{}
 }
 
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
-	// Begin with all move options and filter out invalid moves
-	options := []model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}
-	// TODO create a weight-based system for giving each option a score, and pick the highest score
+	weightedOptions := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+	wg := new(sync.WaitGroup)
+
 	// TODO consider when an enemy snake only has one option
 
-	options = excludeOccupiedCoordsFromOptions(options, selfSnake.Head, board)
-	if len(options) == 1 {
-		return &model.SnakeAction{
-			Move:  options[0],
-			Shout: "Only one option",
-		}, nil
-	}
+	wg.Add(1)
+	go svc.adjustWeightsForOccupiedSquares(wg, &weightedOptions, selfSnake.Head, board)
 
-	options = excludeCoordsAnySnakeIsHeadingFor(options, selfSnake, board)
-	if len(options) == 1 {
-		return &model.SnakeAction{
-			Move:  options[0],
-			Shout: "Only one option",
-		}, nil
-	}
+	//options = excludeCoordsAnySnakeIsHeadingFor(options, selfSnake, board)
 
-	// Return the first remaining option
-	if len(options) > 0 {
-		return &model.SnakeAction{
-			Move:  options[0],
-			Shout: "Multiple options, but done picking",
-		}, nil
-	}
-
-	// No valid options remain
-	return &model.SnakeAction{
-		Move:  model.DOWN,
-		Shout: "Goodbye!",
-	}, nil
+	// Return the highest weighted option
+	// TODO
+	wg.Wait()
+	return &model.SnakeAction{Move: model.UP}, nil
 }
 
-func excludeOccupiedCoordsFromOptions(options []model.Direction, selfHead model.Coord, board model.Board) []model.Direction {
-	var filteredOptions []model.Direction
-	for _, move := range options {
-		targetSquare := selfHead.GetSquareInDirection(move)
-		if board.IsCoordClear(*targetSquare) {
-			filteredOptions = append(filteredOptions, move)
+func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, options *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
+	defer wg.Done()
+
+	for direction, _ := range *options {
+		targetSquare := selfHead.GetSquareInDirection(direction)
+		if !board.IsCoordClear(*targetSquare) {
+			// Coord is occupied, penalize option
+			svc.mux.Lock()
+			(*options)[direction] -= 100
+			svc.mux.Unlock()
 		}
 	}
-	return filteredOptions
+
 }
 
 func excludeCoordsAnySnakeIsHeadingFor(options []model.Direction, selfSnake model.Snake, board model.Board) []model.Direction {
