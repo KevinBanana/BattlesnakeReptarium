@@ -48,7 +48,7 @@ func (b Board) IsCoordClear(coord Coord) bool {
 // WillCoordBeClear returns true if the coord will be clear in the given number of turns
 // This is useful for checking if a snake currently covering a coord will have moved on by the time we get there
 func (b Board) WillCoordBeClear(coord Coord, turns int) bool {
-	// TODO implement
+	// Irrelevant for bananatron, but saving function to remember idea for later
 	return false
 }
 
