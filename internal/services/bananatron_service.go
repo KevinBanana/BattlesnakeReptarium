@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"BattlesnakeReptarium/internal/model"
@@ -33,10 +34,21 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 	wg.Add(1)
 	go svc.adjustWeightsForCollisionCourse(wg, &weightedOptions, selfSnake, board)
 
-	// Return the highest weighted option
-	// TODO
 	wg.Wait()
-	return &model.SnakeAction{Move: model.UP}, nil
+
+	// Get the highest weighted option
+	var highestWeightedDirection model.Direction
+	var highestWeight float64
+	for direction, weight := range weightedOptions {
+		if weight > highestWeight {
+			highestWeightedDirection = direction
+			highestWeight = weight
+		}
+	}
+	return &model.SnakeAction{
+		Move:  highestWeightedDirection,
+		Shout: fmt.Sprintf("Option weight: %v", highestWeight),
+	}, nil
 }
 
 func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
