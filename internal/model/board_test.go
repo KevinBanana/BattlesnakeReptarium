@@ -65,3 +65,34 @@ func TestIsCoordOnBoard(t *testing.T) {
 		})
 	}
 }
+
+func TestDetermineFloodFillCoords(t *testing.T) {
+	t.Run("Flood fill from origin", func(t *testing.T) {
+		board := Board{Width: 3, Height: 3}
+		snakes := []Snake{{Body: []Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}}}
+		board.Snakes = snakes
+
+		got := board.DetermineFloodFillCoords(Coord{X: 0, Y: 0})
+		assert.Equal(t, 5, len(got))
+		want := []Coord{{X: 0, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: 2}, {X: 1, Y: 0}, {X: 2, Y: 0}}
+		if !unorderedEqual(got, want) {
+			t.Errorf("DetermineFloodFillCoords got = %v, want %v", got, want)
+		}
+	})
+}
+
+func unorderedEqual(first, second []Coord) bool {
+	if len(first) != len(second) {
+		return false
+	}
+	exists := make(map[Coord]bool)
+	for _, value := range first {
+		exists[value] = true
+	}
+	for _, value := range second {
+		if !exists[value] {
+			return false
+		}
+	}
+	return true
+}

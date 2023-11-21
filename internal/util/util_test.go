@@ -3,8 +3,6 @@ package util
 import (
 	"testing"
 
-	"BattlesnakeReptarium/internal/model"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,16 +18,12 @@ func TestContains(t *testing.T) {
 		target := 4
 		assert.False(t, Contains(slice, target))
 	})
+}
 
-	t.Run("Coord slice contains target", func(t *testing.T) {
-		slice := []model.Coord{{X: 1, Y: 1}, {X: 2, Y: 2}}
-		target := model.Coord{X: 1, Y: 1}
-		assert.True(t, Contains(slice, target))
-	})
-
-	t.Run("Coord slice does not contain target", func(t *testing.T) {
-		slice := []model.Coord{{X: 1, Y: 1}, {X: 2, Y: 2}}
-		target := model.Coord{X: 3, Y: 3}
-		assert.False(t, Contains(slice, target))
+func TestGetKeysFromMap(t *testing.T) {
+	t.Run("Get keys from map", func(t *testing.T) {
+		m := map[string]int{"1": 0, "2": 0, "3": 0, "4": 0}
+		want := []string{"1", "2", "3", "4"}
+		assert.ElementsMatch(t, want, GetKeysFromMap(m))
 	})
 }

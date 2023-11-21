@@ -23,13 +23,9 @@ const (
 	CollisionCoursePenalty = 15
 )
 
-var (
-	directions = []model.Direction{model.UP, model.LEFT, model.DOWN, model.RIGHT}
-)
-
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	weightedOptions := map[model.Direction]float64{}
-	for i, direction := range directions {
+	for i, direction := range model.AllDirections {
 		weightedOptions[direction] = float64(i) // Give default weight of i so that snake will prefer CCW movement
 	}
 
@@ -37,6 +33,7 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 
 	// TODO consider when an enemy snake only has one option
 
+	// TODO refactor into some weightsAdjustor interface that each adjustor implements
 	wg.Add(1)
 	go svc.adjustWeightsForOccupiedSquares(wg, &weightedOptions, selfSnake.Head, board)
 
@@ -65,10 +62,17 @@ func determineSnakeAction(weightedOptions map[model.Direction]float64) *model.Sn
 	}
 }
 
+// adjustWeightsForCavernSize uses flood fill to determine how many open squares are reachable from each direction
+func (svc *BananatronV1Svc) adjustWeightsForCavernSize(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
+	defer wg.Done()
+
+	// TODO
+}
+
 func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
 	defer wg.Done()
 
-	for _, direction := range directions {
+	for _, direction := range model.AllDirections {
 		targetSquare := selfHead.GetSquareInDirection(direction)
 		if !board.IsCoordClear(*targetSquare) {
 			// Coord is occupied, penalize option
@@ -99,7 +103,7 @@ func (svc *BananatronV1Svc) adjustWeightsForCollisionCourse(wg *sync.WaitGroup, 
 		}
 	}
 
-	for _, direction := range directions {
+	for _, direction := range model.AllDirections {
 		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is a collision course coord, penalize option

@@ -1,5 +1,7 @@
 package model
 
+import "BattlesnakeReptarium/internal/util"
+
 type Board struct {
 	Height  int     `json:"height"`
 	Width   int     `json:"width"`
@@ -7,6 +9,19 @@ type Board struct {
 	Hazards []Coord `json:"hazards"`
 	Snakes  []Snake `json:"snakes"`
 }
+
+type Direction string
+
+const (
+	UP    Direction = "up"
+	DOWN  Direction = "down"
+	LEFT  Direction = "left"
+	RIGHT Direction = "right"
+)
+
+var AllDirections = []Direction{UP, LEFT, DOWN, RIGHT}
+
+// TODO add toString for visualizing board
 
 func (b Board) IsSnakeOnBoard(snake Snake) bool {
 	for _, boardSnake := range b.Snakes {
@@ -62,8 +77,27 @@ func (b Board) isCoordOnBoard(coord Coord) bool {
 	return true
 }
 
-// CalculateCoordsInChamber uses flood fill to count the number of cells connected to a given coord
-func (b Board) CalculateCoordsInChamber(coord Coord) int {
-	// TODO implement flood fill
-	return 0
+// DetermineFloodFillCoords uses flood fill to get the cells connected to a given coord
+func (b Board) DetermineFloodFillCoords(startCoord Coord) []Coord {
+	visited := make(map[Coord]interface{})
+	var emptyCoords []Coord
+	queue := []Coord{startCoord}
+
+	for len(queue) > 0 {
+		coord := queue[0]
+		queue = queue[1:]
+		if _, ok := visited[coord]; ok {
+			continue
+		}
+		visited[coord] = nil
+		for _, direction := range AllDirections {
+			neighbor := coord.GetSquareInDirection(direction)
+			if b.IsCoordClear(*neighbor) {
+				emptyCoords = append(emptyCoords, *neighbor)
+				queue = append(queue, *neighbor)
+			}
+		}
+	}
+
+	return util.GetKeysFromMap(visited)
 }

@@ -1,14 +1,5 @@
 package model
 
-type Direction string
-
-const (
-	UP    Direction = "up"
-	DOWN  Direction = "down"
-	LEFT  Direction = "left"
-	RIGHT Direction = "right"
-)
-
 type Snake struct {
 	ID             string              `json:"id"`
 	Name           string              `json:"name"`
