@@ -29,8 +29,8 @@ var (
 
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	weightedOptions := map[model.Direction]float64{}
-	for _, direction := range directions {
-		weightedOptions[direction] = 0
+	for i, direction := range directions {
+		weightedOptions[direction] = float64(i) // Give default weight of i so that snake will prefer CCW movement
 	}
 
 	wg := new(sync.WaitGroup)
