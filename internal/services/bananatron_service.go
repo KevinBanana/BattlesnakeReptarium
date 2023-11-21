@@ -34,11 +34,10 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 	// TODO consider when an enemy snake only has one option
 
 	// TODO refactor into some weightsAdjustor interface that each adjustor implements
-	wg.Add(1)
+	wg.Add(3)
 	go svc.adjustWeightsForOccupiedSquares(wg, &weightedOptions, selfSnake.Head, board)
-
-	wg.Add(1)
 	go svc.adjustWeightsForCollisionCourse(wg, &weightedOptions, selfSnake, board)
+	go svc.adjustWeightsForCavernSize(wg, &weightedOptions, selfSnake.Head, board)
 
 	wg.Wait()
 
@@ -66,7 +65,13 @@ func determineSnakeAction(weightedOptions map[model.Direction]float64) *model.Sn
 func (svc *BananatronV1Svc) adjustWeightsForCavernSize(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
 	defer wg.Done()
 
-	// TODO
+	for _, direction := range model.AllDirections {
+		targetSquare := selfHead.GetSquareInDirection(direction)
+		floodFillCoords := board.DetermineFloodFillCoords(*targetSquare)
+		svc.mux.Lock()
+		(*weightedOptions)[direction] += float64(len(floodFillCoords))
+		svc.mux.Unlock()
+	}
 }
 
 func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfHead model.Coord, board model.Board) {
