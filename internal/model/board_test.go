@@ -79,6 +79,15 @@ func TestDetermineFloodFillCoords(t *testing.T) {
 			t.Errorf("DetermineFloodFillCoords got = %v, want %v", got, want)
 		}
 	})
+
+	t.Run("Flood fill from origin with hazard", func(t *testing.T) {
+		board := Board{Width: 3, Height: 3, Hazards: []Coord{{X: 0, Y: 0}}}
+		snakes := []Snake{{Body: []Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}}}
+		board.Snakes = snakes
+
+		got := board.DetermineFloodFillCoords(Coord{X: 0, Y: 0})
+		assert.Equal(t, 0, len(got))
+	})
 }
 
 func unorderedEqual(first, second []Coord) bool {

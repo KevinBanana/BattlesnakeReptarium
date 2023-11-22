@@ -19,8 +19,9 @@ func NewBananatronSvc() *BananatronV1Svc {
 }
 
 const (
-	OccupiedSquarePenalty  = 9999
-	CollisionCoursePenalty = 15
+	OccupiedSquarePenalty            = 9999
+	CollisionCoursePenalty           = 10
+	CorneredSnakeEscapeSquarePenalty = 15
 )
 
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
@@ -33,11 +34,11 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 
 	// TODO consider when an enemy snake only has one option
 
-	// TODO refactor into some weightsAdjustor interface that each adjustor implements
-	wg.Add(3)
+	wg.Add(4)
 	go svc.adjustWeightsForOccupiedSquares(wg, &weightedOptions, selfSnake.Head, board)
 	go svc.adjustWeightsForCollisionCourse(wg, &weightedOptions, selfSnake, board)
 	go svc.adjustWeightsForCavernSize(wg, &weightedOptions, selfSnake.Head, board)
+	go svc.adjustWeightsForAvoidingCorneredSnakes(wg, &weightedOptions, selfSnake, board)
 
 	wg.Wait()
 
@@ -58,6 +59,39 @@ func determineSnakeAction(weightedOptions map[model.Direction]float64) *model.Sn
 	return &model.SnakeAction{
 		Move:  highestWeightedDirection,
 		Shout: fmt.Sprintf("Option weight: %v", highestWeight),
+	}
+}
+
+// adjustWeightsForAvoidingCorneredSnakes When an enemy snake has only one valid move, avoid moving to that coord
+func (svc *BananatronV1Svc) adjustWeightsForAvoidingCorneredSnakes(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board) {
+	defer wg.Done()
+
+	var nextOccupiedCoords []model.Coord // Tracks escape coords for cornered snakes
+	for _, snake := range board.Snakes {
+		// Exclude self
+		if snake.ID == selfSnake.ID {
+			continue
+		}
+		var clearOptions []model.Coord
+		for _, direction := range model.AllDirections {
+			targetSquare := snake.Head.GetSquareInDirection(direction)
+			if board.IsCoordClear(*targetSquare) {
+				clearOptions = append(clearOptions, *targetSquare)
+			}
+		}
+		if len(clearOptions) == 1 { // Snake only has one valid move, it is cornered
+			nextOccupiedCoords = append(nextOccupiedCoords, clearOptions[0])
+		}
+	}
+
+	for _, direction := range model.AllDirections {
+		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
+		if util.Contains(nextOccupiedCoords, *targetSquare) {
+			// Coord is an escape coord for cornered snake, penalize option
+			svc.mux.Lock()
+			(*weightedOptions)[direction] -= CorneredSnakeEscapeSquarePenalty
+			svc.mux.Unlock()
+		}
 	}
 }
 
