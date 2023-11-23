@@ -79,6 +79,11 @@ func (b Board) isCoordOnBoard(coord Coord) bool {
 
 // DetermineFloodFillCoords uses flood fill to get the cells connected to a given coord
 func (b Board) DetermineFloodFillCoords(startCoord Coord) []Coord {
+	// Ensure the start coord is clear
+	if !b.IsCoordClear(startCoord) {
+		return []Coord{}
+	}
+
 	visited := make(map[Coord]interface{})
 	var emptyCoords []Coord
 	queue := []Coord{startCoord}

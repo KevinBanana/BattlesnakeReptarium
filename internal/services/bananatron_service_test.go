@@ -44,7 +44,7 @@ func TestAdjustWeightsForOccupiedSquares(t *testing.T) {
 	}
 }
 
-func TestExcludeCoordsAnySnakeIsHeadingFor(t *testing.T) {
+func TestAdjustWeightsForCollisionCourse(t *testing.T) {
 	svc := NewBananatronSvc()
 	wg := new(sync.WaitGroup)
 
@@ -73,6 +73,64 @@ func TestExcludeCoordsAnySnakeIsHeadingFor(t *testing.T) {
 		wg.Wait()
 		if !reflect.DeepEqual(options, want) {
 			t.Errorf("adjustWeightsForCollisionCourse() = %v, want %v", options, want)
+		}
+	})
+}
+
+func TestAdjustWeightsForCavernSize(t *testing.T) {
+	svc := NewBananatronSvc()
+	wg := new(sync.WaitGroup)
+
+	t.Run("Avoid smaller cavern", func(t *testing.T) {
+		options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+		snakes := []model.Snake{
+			{ID: "enemySnake", Head: model.Coord{X: 1, Y: 2}, Body: []model.Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}},
+			{ID: "selfSnake", Head: model.Coord{X: 0, Y: 1}},
+		}
+		board := model.Board{
+			Height:  3,
+			Width:   3,
+			Food:    nil,
+			Hazards: nil,
+			Snakes:  snakes,
+		}
+
+		wg.Add(1)
+		svc.adjustWeightsForCavernSize(wg, &options, snakes[1].Head, board)
+		wg.Wait()
+		want := map[model.Direction]float64{model.UP: 1, model.LEFT: 0, model.DOWN: 3, model.RIGHT: 0}
+		if !reflect.DeepEqual(options, want) {
+			t.Errorf("adjustWeightsForCavernSize() = %v, want %v", options, want)
+		}
+	})
+}
+
+func TestAdjustWeightsForAvoidingCorneredSnakes(t *testing.T) {
+	svc := NewBananatronSvc()
+	wg := new(sync.WaitGroup)
+
+	t.Run("Avoid cornered snake", func(t *testing.T) {
+		options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+		snakes := []model.Snake{
+			// Enemy snake must move left
+			{ID: "enemySnake", Head: model.Coord{X: 1, Y: 2}, Body: []model.Coord{{X: 1, Y: 2}, {X: 2, Y: 2}, {X: 2, Y: 1}, {X: 1, Y: 1}}},
+			// Self snake can move up or down
+			{ID: "selfSnake", Head: model.Coord{X: 0, Y: 1}},
+		}
+		board := model.Board{
+			Height:  3,
+			Width:   3,
+			Food:    nil,
+			Hazards: nil,
+			Snakes:  snakes,
+		}
+
+		wg.Add(1)
+		svc.adjustWeightsForAvoidingCorneredSnakes(wg, &options, snakes[1], board)
+		wg.Wait()
+		want := map[model.Direction]float64{model.UP: -CorneredSnakeEscapeSquarePenalty, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+		if !reflect.DeepEqual(options, want) {
+			t.Errorf("adjustWeightsForAvoidingCorneredSnakes() = %v, want %v", options, want)
 		}
 	})
 }
