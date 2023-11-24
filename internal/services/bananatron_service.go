@@ -31,9 +31,6 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 	}
 
 	wg := new(sync.WaitGroup)
-
-	// TODO consider when an enemy snake only has one option
-
 	wg.Add(4)
 	go svc.adjustWeightsForOccupiedSquares(wg, &weightedOptions, selfSnake.Head, board)
 	go svc.adjustWeightsForCollisionCourse(wg, &weightedOptions, selfSnake, board)
