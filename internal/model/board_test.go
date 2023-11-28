@@ -105,3 +105,16 @@ func unorderedEqual(first, second []Coord) bool {
 	}
 	return true
 }
+
+func TestPrintGameBoard(t *testing.T) {
+	t.Run("Print game board", func(t *testing.T) {
+		board := Board{
+			Height:  10,
+			Width:   10,
+			Food:    nil,
+			Hazards: nil,
+			Snakes:  nil,
+		}
+		PrintGameBoard(board)
+	})
+}

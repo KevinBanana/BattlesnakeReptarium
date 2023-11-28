@@ -1,6 +1,12 @@
 package model
 
-import "BattlesnakeReptarium/internal/util"
+import (
+	"fmt"
+
+	"BattlesnakeReptarium/internal/util"
+
+	"github.com/rodaine/table"
+)
 
 type Board struct {
 	Height  int     `json:"height"`
@@ -105,4 +111,24 @@ func (b Board) DetermineFloodFillCoords(startCoord Coord) []Coord {
 	}
 
 	return util.GetKeysFromMap(visited)
+}
+
+func PrintGameBoard(board Board) {
+	cols := make([]string, board.Width+1)
+	cols[0] = " "
+	for c_i := 0; c_i < board.Width; c_i++ {
+		cols[c_i+1] = fmt.Sprint(c_i)
+	}
+	visualizedBoard := table.New(cols)
+
+	for r_i := 0; r_i < board.Height; r_i++ {
+		row := make([]string, board.Width+1)
+		row[0] = fmt.Sprint(r_i)
+		for c_i := 0; c_i < board.Width; c_i++ {
+			row[c_i+1] = "_"
+		}
+		visualizedBoard.AddRow(row)
+	}
+
+	visualizedBoard.Print()
 }
