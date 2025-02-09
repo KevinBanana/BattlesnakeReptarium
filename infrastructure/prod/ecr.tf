@@ -11,7 +11,15 @@ resource "aws_ecr_repository" "battlesnake" {
   }
 
   lifecycle {
-    policy = <<EOF
+
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_ecr_lifecycle_policy" "image_deletion_rules" {
+  repository = aws_ecr_repository.battlesnake.name
+  policy     = <<EOF
 {
   "rules": [
     {
@@ -42,7 +50,4 @@ resource "aws_ecr_repository" "battlesnake" {
   ]
 }
 EOF
-  }
-
-  tags = local.common_tags
 }
