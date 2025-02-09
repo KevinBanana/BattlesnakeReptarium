@@ -10,5 +10,39 @@ resource "aws_ecr_repository" "battlesnake" {
     encryption_type = "AES256"
   }
 
+  lifecycle {
+    policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Expire untagged images older than 7 days",
+      "selection": {
+        "tagStatus": "untagged",
+        "countType": "sinceImagePushed",
+        "countUnit": "days",
+        "countNumber": 7
+      },
+      "action": {
+        "type": "expire"
+      }
+    },
+    {
+      "rulePriority": 2,
+      "description": "Keep only the 10 most recent tagged images",
+      "selection": {
+        "tagStatus": "tagged",
+        "countType": "imageCountMoreThan",
+        "countNumber": 10
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
+  }
+
   tags = local.common_tags
 }
