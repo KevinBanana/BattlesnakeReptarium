@@ -31,7 +31,7 @@ jobs:
           
           # Tag and push
           docker tag battlesnake-image:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image+
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image
 
     outputs:
       image_tag: battlesnake-image
@@ -59,8 +59,8 @@ jobs:
         working-directory: infrastructure/prod
 
       - name: Terraform Plan
-        run: terraform plan
-        working-directory: infrastructure/prod "image_tag=${{ needs.build_and_push.outputs.image_tag }}" -out plan.out
+        working-directory: infrastructure/prod
+        run: terraform plan -var "image_tag=${{ needs.build_and_push.outputs.image_tag }}" -out plan.out
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
