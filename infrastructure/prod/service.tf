@@ -23,13 +23,6 @@ resource "aws_instance" "battlesnake" {
     volume_type           = "gp2"
   }
 
-  # connection {
-  #   type        = "ssh"
-  #   user        = "ec2-user"
-  #   host        = self.public_ip
-  #   private_key = var.battlesnake_key
-  # }
-
   provisioner "remote-exec" {
     inline = [
       "aws ecr get-login-password --region ${local.region} | sudo docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com",
