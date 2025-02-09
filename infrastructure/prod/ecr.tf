@@ -40,6 +40,7 @@ resource "aws_ecr_lifecycle_policy" "image_deletion_rules" {
       "description": "Keep only the 10 most recent tagged images",
       "selection": {
         "tagStatus": "tagged",
+        "tagPatternList": [".*"],
         "countType": "imageCountMoreThan",
         "countNumber": 10
       },
