@@ -11,7 +11,8 @@ data "aws_ami" "latest_amazon_linux" {
 resource "aws_instance" "battlesnake" {
   ami                         = data.aws_ami.latest_amazon_linux.id
   associate_public_ip_address = true
-  instance_type               = "t2.nano"
+  instance_type               = "t2.micro"
+  iam_instance_profile        = aws_iam_instance_profile.ec2_instance_profile.name
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids = [
     aws_security_group.public_traffic.id
@@ -32,55 +33,18 @@ resource "aws_instance" "battlesnake" {
 
   provisioner "remote-exec" {
     inline = [
-      "rm -f /home/ec2-user/app",
-      "mkdir -p /home/ec2-user/app",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../../../"
-    destination = "/home/ec2-user/app"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
       "sudo yum update -y",
       "sudo yum install -y docker",
       "sudo service docker start",
-      "sudo usermod -aG docker ec2-user",
-      "cd /home/ec2-user/app",
-      "sudo docker build -t go-app .",
-      "sudo docker run -d -p 8080:8080 go-app"
+      "aws ecr get-login-password --region ${local.region} | sudo docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com",
+      "sudo docker pull ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:latest",
+      "sudo docker run -d -p 80:8080 ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:latest"
     ]
   }
 
   tags = merge(local.common_tags, {
     Name = "battlesnake-ec2"
   })
-}
-
-resource "aws_security_group" "public_traffic" {
-  description = "Security group allowing traffic on port 443"
-  name        = "battlesnake-public-traffic"
-  vpc_id      = aws_vpc.vpc1.id
-
-  tags = local.common_tags
-}
-
-resource "aws_vpc_security_group_ingress_rule" "public_traffic" {
-  security_group_id = aws_security_group.public_traffic.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 8080
-  to_port           = 8080
-  ip_protocol       = "tcp"
-}
-
-resource "aws_vpc_security_group_ingress_rule" "ssh_ingress" {
-  security_group_id = aws_security_group.public_traffic.id
-  cidr_ipv4         = "136.55.173.17/32"
-  from_port         = 22
-  to_port           = 22
-  ip_protocol       = "tcp"
 }
 
 output "ec2_instance_public_ip" {

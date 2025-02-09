@@ -1,5 +1,5 @@
-
 config/local.yml
 infrastructure/.terraform.tfstate.lock.info
 /.ssh/
 */.terraform/
+infrastructure/prod/us-east-1/.terraform/
