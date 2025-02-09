@@ -31,7 +31,10 @@ jobs:
           
           # Tag and push
           docker tag battlesnake-image:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image+
+
+    outputs:
+      image_tag: battlesnake-image
 
 deploy:
   needs: build_and_push
@@ -40,8 +43,6 @@ deploy:
   steps:
     - name: Check out infra repo
       uses: actions/checkout@v3
-      # If your Terraform is in the same repo, that's fine.
-      # Otherwise, specify the correct repo with 'with: repository: your-org/infra-repo'
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -59,7 +60,7 @@ deploy:
 
     - name: Terraform Plan
       run: terraform plan
-      working-directory: infrastructure/prod
+      working-directory: infrastructure/prod "image_tag=${{ needs.build_and_push.outputs.image_tag }}" -out plan.out
 
     - name: Terraform Apply
       run: terraform apply -auto-approve

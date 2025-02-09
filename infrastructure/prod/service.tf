@@ -33,12 +33,9 @@ resource "aws_instance" "battlesnake" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo yum update -y",
-      "sudo yum install -y docker",
-      "sudo service docker start",
       "aws ecr get-login-password --region ${local.region} | sudo docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com",
-      "sudo docker pull ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:latest",
-      "sudo docker run -d -p 8080:8080 ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:latest"
+      "sudo docker pull ${local.ecr_image_uri}",
+      "sudo docker run -d -p 8080:8080 ${local.ecr_image_uri}"
     ]
   }
 

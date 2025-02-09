@@ -7,4 +7,5 @@ locals {
     env     = local.environment
     project = local.project
   }
+  ecr_image_uri = "${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:${var.image_tag}"
 }
