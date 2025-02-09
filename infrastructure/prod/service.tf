@@ -27,7 +27,7 @@ resource "aws_instance" "battlesnake" {
   connection {
     type = "ssh"
     user = "ec2-user"
-    private_key = file("./../../../.ssh/battlesnake-key.pem")
+    private_key = file("./../../.ssh/battlesnake-key.pem")
     host = self.public_ip
   }
 
@@ -38,7 +38,7 @@ resource "aws_instance" "battlesnake" {
       "sudo service docker start",
       "aws ecr get-login-password --region ${local.region} | sudo docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com",
       "sudo docker pull ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:latest",
-      "sudo docker run -d -p 80:8080 ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:latest"
+      "sudo docker run -d -p 8080:8080 ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:latest"
     ]
   }
 
