@@ -3,7 +3,6 @@ package logging
 import log "github.com/sirupsen/logrus"
 
 func SetLogLevel(level string) {
-	// set log level
 	switch level {
 	case "TRACE":
 		log.SetLevel(log.TraceLevel)

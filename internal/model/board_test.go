@@ -69,7 +69,12 @@ func TestIsCoordOnBoard(t *testing.T) {
 func TestDetermineFloodFillCoords(t *testing.T) {
 	t.Run("Flood fill from origin", func(t *testing.T) {
 		board := Board{Width: 3, Height: 3}
-		snakes := []Snake{{Body: []Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}}}
+		snakes := []Snake{
+			{
+				Body: []Coord{{X: 1, Y: 1}, {X: 2, Y: 1}},
+				Head: Coord{X: 1, Y: 2},
+			},
+		}
 		board.Snakes = snakes
 
 		got := board.DetermineFloodFillCoords(Coord{X: 0, Y: 0})

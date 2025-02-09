@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log" // logrus won't be initialized yet
+	"log"
 
 	"github.com/spf13/viper"
 )
