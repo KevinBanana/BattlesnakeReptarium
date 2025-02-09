@@ -63,5 +63,7 @@ jobs:
         run: terraform plan -var "image_tag=${{ needs.build_and_push.outputs.image_tag }}" -out plan.out
 
       - name: Terraform Apply
+        #        env:
+        #          TF_VAR_battlesnake_key: ${{ secrets.BATTLESNAKE_KEY }}
         run: terraform apply -auto-approve
         working-directory: infrastructure/prod

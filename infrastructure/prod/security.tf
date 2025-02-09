@@ -14,13 +14,13 @@ resource "aws_vpc_security_group_ingress_rule" "public_traffic" {
   ip_protocol       = "tcp"
 }
 
-resource "aws_vpc_security_group_ingress_rule" "ssh_ingress" {
-  security_group_id = aws_security_group.public_traffic.id
-  cidr_ipv4         = "136.55.173.17/32"
-  from_port         = 22
-  to_port           = 22
-  ip_protocol       = "tcp"
-}
+# resource "aws_vpc_security_group_ingress_rule" "ssh_ingress" {
+#   security_group_id = aws_security_group.public_traffic.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   from_port         = 22
+#   to_port           = 22
+#   ip_protocol       = "tcp"
+# }
 
 data "aws_iam_policy_document" "ec2_assume_role" {
   statement {

@@ -23,13 +23,12 @@ resource "aws_instance" "battlesnake" {
     volume_type           = "gp2"
   }
 
-  key_name = "battlesnake-key"
-  connection {
-    type = "ssh"
-    user = "ec2-user"
-    private_key = file("./../../.ssh/battlesnake-key.pem")
-    host = self.public_ip
-  }
+  # connection {
+  #   type        = "ssh"
+  #   user        = "ec2-user"
+  #   host        = self.public_ip
+  #   private_key = var.battlesnake_key
+  # }
 
   provisioner "remote-exec" {
     inline = [
