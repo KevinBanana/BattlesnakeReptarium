@@ -7,6 +7,4 @@ locals {
     env     = local.environment
     project = local.project
   }
-
-
 }
