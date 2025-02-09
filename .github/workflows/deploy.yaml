@@ -33,9 +33,6 @@ jobs:
           docker tag battlesnake-image:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:battlesnake-image
 
-    outputs:
-      image_tag: battlesnake-image
-
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -60,7 +57,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: infrastructure/prod
-        run: terraform plan -input=false -var "image_tag=${{ needs.build_and_push.outputs.image_tag }}" -out plan.out
+        run: terraform plan -input=false -var "image_tag=battlesnake-image" -out plan.out
 
       - name: Terraform Apply
         #        env:
