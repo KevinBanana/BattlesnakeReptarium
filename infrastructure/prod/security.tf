@@ -6,11 +6,19 @@ resource "aws_security_group" "public_traffic" {
   tags = local.common_tags
 }
 
-resource "aws_vpc_security_group_ingress_rule" "public_traffic" {
+resource "aws_vpc_security_group_ingress_rule" "public_traffic_80" {
   security_group_id = aws_security_group.public_traffic.id
   cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 8080
-  to_port           = 8080
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "public_traffic_443" {
+  security_group_id = aws_security_group.public_traffic.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
   ip_protocol       = "tcp"
 }
 
