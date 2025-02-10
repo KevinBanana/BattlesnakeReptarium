@@ -11,7 +11,7 @@ data "aws_ami" "latest_amazon_linux" {
 resource "aws_instance" "battlesnake" {
   ami                         = data.aws_ami.latest_amazon_linux.id
   associate_public_ip_address = true
-  instance_type               = "t2.micro"
+  instance_type               = "t2.small"
   iam_instance_profile        = aws_iam_instance_profile.ec2_instance_profile.name
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids = [
@@ -25,6 +25,10 @@ resource "aws_instance" "battlesnake" {
 
   provisioner "remote-exec" {
     inline = [
+      "sudo amazon-linux-extras install docker -y",
+      "sudo service docker start",
+      "sudo usermod -a -G docker ec2-user",
+
       "aws ecr get-login-password --region ${local.region} | sudo docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com",
       "sudo docker pull ${local.ecr_image_uri}",
       "sudo docker run -d -p 80:8080 ${local.ecr_image_uri}"
