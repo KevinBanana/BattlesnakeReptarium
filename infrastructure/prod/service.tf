@@ -11,7 +11,7 @@ data "aws_ami" "latest_amazon_linux" {
 resource "aws_instance" "battlesnake" {
   ami                         = data.aws_ami.latest_amazon_linux.id
   associate_public_ip_address = true
-  instance_type               = "t2.micro"
+  instance_type               = "t3.micro"
   iam_instance_profile        = aws_iam_instance_profile.ec2_instance_profile.name
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids = [
@@ -23,17 +23,24 @@ resource "aws_instance" "battlesnake" {
     volume_type           = "gp2"
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo amazon-linux-extras install docker -y",
-      "sudo service docker start",
-      "sudo usermod -a -G docker ec2-user",
+  user_data = <<-EOF
+    #!/bin/bash
+    # Update packages and install Docker and AWS CLI
+    apt-get update -y
+    apt-get install -y docker.io awscli
 
-      "aws ecr get-login-password --region ${local.region} | sudo docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com",
-      "sudo docker pull ${local.ecr_image_uri}",
-      "sudo docker run -d -p 80:8080 ${local.ecr_image_uri}"
-    ]
-  }
+    # Start Docker service if not already running
+    systemctl start docker
+    systemctl enable docker
+
+    # Authenticate Docker to your ECR registry
+    # Note: Replace region and account details accordingly.
+    aws ecr get-login-password --region ${local.region} | sudo docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${local.region}.amazonaws.com
+
+    # Pull and run your Docker image from ECR
+    docker pull ${local.ecr_image_uri}
+    docker run -d -p 8080:8080 ${local.ecr_image_uri}
+  EOF
 
   tags = merge(local.common_tags, {
     Name = "battlesnake-ec2"
