@@ -94,7 +94,7 @@ resource "aws_ecs_task_definition" "app" {
       name      = "app",
       image     = "${aws_ecr_repository.battlesnake.repository_url}:latest",
       essential = true,
-      portMappings = [{ containerPort = 8080, hostPort = 80 }],
+      portMappings = [{ containerPort = 80, hostPort = 80 }],
 
       environment = [
         { name = "ENVIRONMENT", value = local.environment }

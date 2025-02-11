@@ -24,7 +24,7 @@ func Init(env string) {
 	v.AutomaticEnv()
 
 	v.SetDefault("host", "0.0.0.0")
-	v.SetDefault("port", 8080)
+	v.SetDefault("port", 80)
 
 	if err := v.ReadInConfig(); err != nil {
 		log.Fatalf("error parsing configuration file, %v", err)
