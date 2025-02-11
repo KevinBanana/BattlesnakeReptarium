@@ -90,7 +90,7 @@ func (g GameController) Health(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"apiversion": "1",
 		"author":     "Kevin Bonanno",
-		"color":      "#e8f007",
+		"color":      "#e8f006",
 		"head":       "fang",
 		"tail":       "round-bum",
 	})
