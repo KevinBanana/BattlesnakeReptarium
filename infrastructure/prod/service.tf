@@ -81,6 +81,11 @@ resource "aws_cloudwatch_log_group" "ecs" {
   retention_in_days = 3
 }
 
+data "aws_ecr_image" "battlesnake_image" {
+  repository_name = aws_ecr_repository.battlesnake.name
+  image_tag       = "latest"
+}
+
 resource "aws_ecs_task_definition" "app" {
   family             = "app"
   task_role_arn      = aws_iam_role.ecs_task_role.arn
@@ -92,7 +97,8 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name      = "app",
-      image     = "${aws_ecr_repository.battlesnake.repository_url}:latest",
+      # image     = "${aws_ecr_repository.battlesnake.repository_url}:latest",
+      image     = "${aws_ecr_repository.battlesnake.repository_url}/${aws_ecr_repository.battlesnake.name}:latest@${data.aws_ecr_image.battlesnake_image.image_digest}",
       essential = true,
       portMappings = [{ containerPort = 80, hostPort = 80 }],
 
