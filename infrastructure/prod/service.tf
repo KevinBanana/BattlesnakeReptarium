@@ -96,6 +96,10 @@ resource "aws_ecs_task_definition" "app" {
       essential = true,
       portMappings = [{ containerPort = 80, hostPort = 80 }],
 
+      environment = [
+        { name = "ENVIRONMENT", value = local.environment }
+      ]
+
       logConfiguration = {
         logDriver = "awslogs",
         options = {
