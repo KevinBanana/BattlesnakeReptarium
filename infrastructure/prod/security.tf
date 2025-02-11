@@ -3,31 +3,31 @@ resource "aws_security_group" "public_traffic" {
   name        = "battlesnake-public-traffic"
   vpc_id      = aws_vpc.vpc1.id
 
+  ingress {
+    description = "Allow HTTP traffic"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow HTTPS traffic"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow SSH traffic"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags = local.common_tags
-}
-
-resource "aws_vpc_security_group_ingress_rule" "http_traffic" {
-  security_group_id = aws_security_group.public_traffic.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 8080
-  to_port           = 8080
-  ip_protocol       = "tcp"
-}
-
-resource "aws_vpc_security_group_ingress_rule" "https_traffic" {
-  security_group_id = aws_security_group.public_traffic.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 443
-  to_port           = 443
-  ip_protocol       = "tcp"
-}
-
-resource "aws_vpc_security_group_ingress_rule" "ssh_traffic" {
-  security_group_id = aws_security_group.public_traffic.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 22
-  to_port           = 22
-  ip_protocol       = "tcp"
 }
 
 data "aws_iam_policy_document" "ec2_assume_role" {
