@@ -77,7 +77,7 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
 }
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/demo"
+  name              = "/ecs/battlesnake"
   retention_in_days = 3
 }
 
@@ -98,7 +98,7 @@ resource "aws_ecs_task_definition" "app" {
 
       environment = [
         { name = "ENVIRONMENT", value = local.environment }
-      ]
+      ],
 
       logConfiguration = {
         logDriver = "awslogs",
