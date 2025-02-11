@@ -90,7 +90,11 @@ resource "aws_ecs_service" "app" {
   name            = "app"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = 1
+  desired_count = 1
+
+  // Downtime is acceptable between deploys
+  deployment_maximum_percent         = 100
+  deployment_minimum_healthy_percent = 0
 
   network_configuration {
     security_groups = [aws_security_group.ecs_task.id]
