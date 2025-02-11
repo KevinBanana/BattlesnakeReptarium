@@ -10,11 +10,11 @@ resource "aws_ecr_repository" "battlesnake" {
     encryption_type = "AES256"
   }
 
-  lifecycle {
-
-  }
-
   tags = local.common_tags
+}
+
+output "battlesnake_app_repo_url" {
+  value = aws_ecr_repository.battlesnake.repository_url
 }
 
 resource "aws_ecr_lifecycle_policy" "image_deletion_rules" {

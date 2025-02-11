@@ -7,5 +7,8 @@ locals {
     env     = local.environment
     project = local.project
   }
-  ecr_image_uri = "${local.account_id}.dkr.ecr.${local.region}.amazonaws.com/battlesnake:${var.image_tag}"
+
+  # Availability Zones
+  azs_count = 2
+  azs_names = data.aws_availability_zones.available.names
 }
