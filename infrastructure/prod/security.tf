@@ -1,5 +1,5 @@
 resource "aws_security_group" "public_traffic" {
-  description = "Security group allowing traffic on port 443"
+  description = "Security group allowing traffic"
   name        = "battlesnake-public-traffic"
   vpc_id      = aws_vpc.vpc1.id
 
