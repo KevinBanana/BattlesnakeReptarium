@@ -90,7 +90,7 @@ resource "aws_ecs_service" "app" {
   name            = "app"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = 2
+  desired_count   = 1
 
   network_configuration {
     security_groups = [aws_security_group.ecs_task.id]

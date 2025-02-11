@@ -24,12 +24,12 @@ resource "aws_ecr_lifecycle_policy" "image_deletion_rules" {
   "rules": [
     {
       "rulePriority": 1,
-      "description": "Expire untagged images older than 7 days",
+      "description": "Expire untagged images older than 3 days",
       "selection": {
         "tagStatus": "untagged",
         "countType": "sinceImagePushed",
         "countUnit": "days",
-        "countNumber": 7
+        "countNumber": 3
       },
       "action": {
         "type": "expire"
@@ -37,12 +37,12 @@ resource "aws_ecr_lifecycle_policy" "image_deletion_rules" {
     },
     {
       "rulePriority": 2,
-      "description": "Keep only the 10 most recent tagged images",
+      "description": "Keep only the 3 most recent tagged images",
       "selection": {
         "tagStatus": "tagged",
         "tagPatternList": [".*"],
         "countType": "imageCountMoreThan",
-        "countNumber": 10
+        "countNumber": 3
       },
       "action": {
         "type": "expire"
