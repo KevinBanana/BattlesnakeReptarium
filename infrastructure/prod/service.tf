@@ -97,7 +97,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name      = "app",
-      image     = "${aws_ecr_repository.battlesnake.repository_url}/${aws_ecr_repository.battlesnake.name}:latest@${data.aws_ecr_image.battlesnake_image.image_digest}",
+      image     = "${aws_ecr_repository.battlesnake.repository_url}:latest@${data.aws_ecr_image.battlesnake_image.image_digest}",
       essential = true,
       portMappings = [{ containerPort = 80, hostPort = 80 }],
 
