@@ -8,6 +8,8 @@ import (
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/util"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type BananatronV1Svc struct {
@@ -99,8 +101,20 @@ func (svc *BananatronV1Svc) adjustWeightsForCavernSize(wg *sync.WaitGroup, weigh
 	for _, direction := range model.AllDirections {
 		targetSquare := selfHead.GetSquareInDirection(direction)
 		floodFillCoords := board.DetermineFloodFillCoords(*targetSquare)
+		if len(floodFillCoords) == 0 {
+			continue
+		}
+
+		// Divide the total squares by the number of players in the cavern since they will each consume a portion
+		snakesInCavern := board.FindAllSnakesInCavern(floodFillCoords)
+		if len(snakesInCavern) == 0 {
+			log.Error("Snakes in cavern is 0. Should have found at least self snake")
+			continue
+		}
+
+		cavernScore := float64(len(floodFillCoords)) / float64(len(snakesInCavern))
 		svc.mux.Lock()
-		(*weightedOptions)[direction] += float64(len(floodFillCoords))
+		(*weightedOptions)[direction] += cavernScore
 		svc.mux.Unlock()
 	}
 }
