@@ -21,9 +21,10 @@ func NewBananatronSvc() *BananatronV1Svc {
 }
 
 const (
-	OccupiedSquarePenalty            = 9999
-	CollisionCoursePenalty           = 10
-	CorneredSnakeEscapeSquarePenalty = 15
+	OccupiedSquarePenalty            = -9999
+	EnemyPotentialMovePenalty        = -4
+	CollisionCoursePenalty           = -10
+	CorneredSnakeEscapeSquarePenalty = -15
 )
 
 func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
@@ -33,11 +34,13 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 	}
 
 	wg := new(sync.WaitGroup)
-	wg.Add(4)
+	wg.Add(5)
+	// TODO refactor this
 	go svc.adjustWeightsForOccupiedSquares(wg, &weightedOptions, selfSnake.Head, board)
 	go svc.adjustWeightsForCollisionCourse(wg, &weightedOptions, selfSnake, board)
 	go svc.adjustWeightsForCavernSize(wg, &weightedOptions, selfSnake.Head, board)
 	go svc.adjustWeightsForAvoidingCorneredSnakes(wg, &weightedOptions, selfSnake, board)
+	go svc.adjustWeightsForPotentialEnemyMove(wg, &weightedOptions, selfSnake, board)
 
 	wg.Wait()
 
@@ -87,9 +90,7 @@ func (svc *BananatronV1Svc) adjustWeightsForAvoidingCorneredSnakes(wg *sync.Wait
 		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is an escape coord for cornered snake, penalize option
-			svc.mux.Lock()
-			(*weightedOptions)[direction] -= CorneredSnakeEscapeSquarePenalty
-			svc.mux.Unlock()
+			svc.applyScoreToSquare(weightedOptions, direction, CorneredSnakeEscapeSquarePenalty)
 		}
 	}
 }
@@ -113,9 +114,7 @@ func (svc *BananatronV1Svc) adjustWeightsForCavernSize(wg *sync.WaitGroup, weigh
 		}
 
 		cavernScore := float64(len(floodFillCoords)) / float64(len(snakesInCavern))
-		svc.mux.Lock()
-		(*weightedOptions)[direction] += cavernScore
-		svc.mux.Unlock()
+		svc.applyScoreToSquare(weightedOptions, direction, cavernScore)
 	}
 }
 
@@ -126,9 +125,7 @@ func (svc *BananatronV1Svc) adjustWeightsForOccupiedSquares(wg *sync.WaitGroup, 
 		targetSquare := selfHead.GetSquareInDirection(direction)
 		if !board.IsCoordClear(*targetSquare) {
 			// Coord is occupied, penalize option
-			svc.mux.Lock()
-			(*weightedOptions)[direction] -= OccupiedSquarePenalty
-			svc.mux.Unlock()
+			svc.applyScoreToSquare(weightedOptions, direction, OccupiedSquarePenalty)
 		}
 	}
 
@@ -157,9 +154,35 @@ func (svc *BananatronV1Svc) adjustWeightsForCollisionCourse(wg *sync.WaitGroup, 
 		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is a collision course coord, penalize option
-			svc.mux.Lock()
-			(*weightedOptions)[direction] -= CollisionCoursePenalty
-			svc.mux.Unlock()
+			svc.applyScoreToSquare(weightedOptions, direction, CollisionCoursePenalty)
 		}
 	}
+}
+
+// adjustWeightsForPotentialEnemyMove If an enemy snake could move onto a square that our snake could move to, penalize that square
+func (svc *BananatronV1Svc) adjustWeightsForPotentialEnemyMove(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board) {
+	defer wg.Done()
+
+	for _, direction := range model.AllDirections {
+		potentialMoveSquare := selfSnake.Head.GetSquareInDirection(direction)
+		for _, enemySnake := range board.Snakes {
+			// Exclude self
+			if enemySnake.ID == selfSnake.ID {
+				continue
+			}
+			for _, snakeDirection := range model.AllDirections {
+				potentialEnemyMoveSquare := enemySnake.Head.GetSquareInDirection(snakeDirection)
+				if potentialEnemyMoveSquare != nil && *potentialEnemyMoveSquare == *potentialMoveSquare {
+					// Coord is a potential enemy move coord, penalize option
+					svc.applyScoreToSquare(weightedOptions, direction, EnemyPotentialMovePenalty)
+				}
+			}
+		}
+	}
+}
+
+func (svc *BananatronV1Svc) applyScoreToSquare(weightedOptions *map[model.Direction]float64, direction model.Direction, score float64) {
+	svc.mux.Lock()
+	(*weightedOptions)[direction] += score
+	svc.mux.Unlock()
 }
