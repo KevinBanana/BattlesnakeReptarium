@@ -3,5 +3,3 @@ infrastructure/.terraform.tfstate.lock.info
 /.ssh/
 */.terraform/
 infrastructure/prod/.terraform/
-infrastructure/prod/terraform.tfstate
-infrastructure/prod/terraform.tfstate.backup
