@@ -1,4 +1,4 @@
-package services
+package banana_bot_v1_service
 
 import (
 	"context"

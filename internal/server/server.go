@@ -7,6 +7,8 @@ import (
 	"BattlesnakeReptarium/internal/controllers"
 	"BattlesnakeReptarium/internal/repo"
 	"BattlesnakeReptarium/internal/services"
+	"BattlesnakeReptarium/internal/services/banana_bot_v1_service"
+	"BattlesnakeReptarium/internal/services/bananatron_service"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -49,9 +51,9 @@ func createSelectedBotService(activeBot string) *services.Bot {
 
 	switch activeBot {
 	case bananaBotV1:
-		botSvc = services.NewBananaBotV1Svc()
+		botSvc = banana_bot_v1_service.NewBananaBotV1Svc()
 	case bananatron:
-		botSvc = services.NewBananatronSvc()
+		botSvc = bananatron_service.NewBananatronSvc()
 	default:
 		log.Errorf("Cannot set active bot: '%s' not found", activeBot)
 		return nil
