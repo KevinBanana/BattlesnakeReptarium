@@ -33,7 +33,7 @@ func (b Board) IsSnakeOnBoard(snake Snake) bool {
 }
 
 func (b Board) IsCoordClear(coord Coord) bool {
-	if !b.isCoordOnBoard(coord) {
+	if !b.IsCoordOnBoard(coord) {
 		return false
 	}
 
@@ -67,7 +67,7 @@ func (b Board) WillCoordBeClear(coord Coord, turns int) bool {
 	return false
 }
 
-func (b Board) isCoordOnBoard(coord Coord) bool {
+func (b Board) IsCoordOnBoard(coord Coord) bool {
 	if coord.X < 0 || coord.X >= b.Width {
 		return false
 	}
@@ -105,4 +105,19 @@ func (b Board) DetermineFloodFillCoords(startCoord Coord) []Coord {
 	}
 
 	return util.GetKeysFromMap(visited)
+}
+
+func (b Board) FindAllSnakesInCavern(cavernCoords []Coord) []Snake {
+	var snakesInCavern []Snake
+	for _, snake := range b.Snakes {
+		// For each snake on board, look at the head and check if an adjacent coord is in the cavern
+		for _, direction := range AllDirections {
+			adjacentCoord := snake.Head.GetSquareInDirection(direction)
+			if util.Contains(cavernCoords, *adjacentCoord) {
+				snakesInCavern = append(snakesInCavern, snake)
+				break
+			}
+		}
+	}
+	return snakesInCavern
 }

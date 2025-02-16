@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"BattlesnakeReptarium/internal/mock"
 	"BattlesnakeReptarium/internal/model"
 )
 
@@ -81,28 +82,93 @@ func TestAdjustWeightsForCavernSize(t *testing.T) {
 	svc := NewBananatronSvc()
 	wg := new(sync.WaitGroup)
 
-	t.Run("Avoid smaller cavern", func(t *testing.T) {
-		options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-		snakes := []model.Snake{
-			{ID: "enemySnake", Head: model.Coord{X: 1, Y: 2}, Body: []model.Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}},
-			{ID: "selfSnake", Head: model.Coord{X: 0, Y: 1}},
-		}
-		board := model.Board{
-			Height:  3,
-			Width:   3,
-			Food:    nil,
-			Hazards: nil,
-			Snakes:  snakes,
-		}
+	//t.Run("Avoid smaller cavern", func(t *testing.T) {
+	//	options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+	//	snakes := []model.Snake{
+	//		{ID: "enemySnake", Head: model.Coord{X: 1, Y: 2}, Body: []model.Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}},
+	//		{ID: "selfSnake", Head: model.Coord{X: 0, Y: 1}},
+	//	}
+	//	board := model.Board{
+	//		Height:  3,
+	//		Width:   3,
+	//		Food:    nil,
+	//		Hazards: nil,
+	//		Snakes:  snakes,
+	//	}
+	//
+	//	wg.Add(1)
+	//	svc.adjustWeightsForCavernSize(wg, &options, snakes[1].Head, board)
+	//	wg.Wait()
+	//	want := map[model.Direction]float64{model.UP: 1, model.LEFT: 0, model.DOWN: 3, model.RIGHT: 0}
+	//	if !reflect.DeepEqual(options, want) {
+	//		t.Errorf("adjustWeightsForCavernSize() = %v, want %v", options, want)
+	//	}
+	//})
 
-		wg.Add(1)
-		svc.adjustWeightsForCavernSize(wg, &options, snakes[1].Head, board)
-		wg.Wait()
-		want := map[model.Direction]float64{model.UP: 1, model.LEFT: 0, model.DOWN: 3, model.RIGHT: 0}
-		if !reflect.DeepEqual(options, want) {
-			t.Errorf("adjustWeightsForCavernSize() = %v, want %v", options, want)
-		}
-	})
+	tests := map[string]struct {
+		selfHeadCoord model.Coord
+		board         model.Board
+		want          map[model.Direction]float64
+	}{
+		"Avoid smaller cavern": {
+			selfHeadCoord: model.Coord{X: 0, Y: 1},
+			board: mock.NewBoard(mock.WithBoardHeight(3), mock.WithBoardWidth(3), mock.WithBoardSnakes([]model.Snake{
+				{ID: "enemySnake", Head: model.Coord{X: 1, Y: 2}, Body: []model.Coord{{X: 1, Y: 1}, {X: 2, Y: 1}}},
+				{ID: "selfSnake", Head: model.Coord{X: 0, Y: 1}},
+			})),
+			want: map[model.Direction]float64{model.UP: .5, model.LEFT: 0, model.DOWN: 3, model.RIGHT: 0},
+		},
+		"Choose cavern even though it has snake": {
+			selfHeadCoord: model.Coord{X: 0, Y: 1},
+			board: mock.NewBoard(mock.WithBoardHeight(3), mock.WithBoardWidth(4), mock.WithBoardSnakes([]model.Snake{
+				{ID: "enemySnake", Head: model.Coord{X: 3, Y: 2}, Body: []model.Coord{{X: 2, Y: 2}, {X: 1, Y: 2}}},
+				{ID: "selfSnake", Head: model.Coord{X: 0, Y: 1}, Body: []model.Coord{{X: 0, Y: 0}}},
+			})),
+			want: map[model.Direction]float64{model.UP: 1, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 3},
+		},
+		"Avoid spacious cavern because it has more snakes": {
+			selfHeadCoord: model.Coord{X: 0, Y: 0},
+			board: mock.NewBoard(mock.WithBoardHeight(5), mock.WithBoardWidth(4), mock.WithBoardSnakes([]model.Snake{
+				{ID: "enemySnake", Head: model.Coord{X: 3, Y: 2}, Body: []model.Coord{{X: 3, Y: 3}, {X: 2, Y: 3}, {X: 1, Y: 3}, {X: 1, Y: 1}, {X: 1, Y: 2}, {X: 1, Y: 4}}},
+				{ID: "selfSnake", Head: model.Coord{X: 0, Y: 0}},
+			})),
+			want: map[model.Direction]float64{model.UP: 4, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 3},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+			wg.Add(1)
+			svc.adjustWeightsForCavernSize(wg, &options, tt.selfHeadCoord, tt.board)
+			wg.Wait()
+			if !reflect.DeepEqual(options, tt.want) {
+				t.Errorf("adjustWeightsForCavernSize() = %v, want %v", options, tt.want)
+			}
+		})
+	}
+
+	//t.Run("Avoid larger cavern that has more snakes", func(t *testing.T) {
+	//	options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
+	//	snakes := []model.Snake{
+	//		{ID: "enemySnake", Head: model.Coord{X: 1, Y: 2}, Body: []model.Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}},
+	//		{ID: "selfSnake", Head: model.Coord{X: 0, Y: 1}},
+	//	}
+	//	board := model.Board{
+	//		Height:  3,
+	//		Width:   3,
+	//		Food:    nil,
+	//		Hazards: nil,
+	//		Snakes:  snakes,
+	//	}
+	//
+	//	wg.Add(1)
+	//	svc.adjustWeightsForCavernSize(wg, &options, snakes[0].Head, board)
+	//	wg.Wait()
+	//	want := map[model.Direction]float64{model.UP: -1, model.LEFT: -2, model.DOWN: -2, model.RIGHT: -2}
+	//	if !reflect.DeepEqual(options, want) {
+	//		t.Errorf("adjustWeightsForCavernSize() = %v, want %v", options, want)
+	//	}
+	//})
 }
 
 func TestAdjustWeightsForAvoidingCorneredSnakes(t *testing.T) {
