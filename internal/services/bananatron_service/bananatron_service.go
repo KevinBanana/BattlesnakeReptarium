@@ -31,6 +31,7 @@ func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, 
 		&CavernSizeAdjuster{},
 		&AvoidingCorneredSnakesAdjuster{},
 		&PotentialEnemyMoveAdjuster{},
+		&VoronoiControlAdjuster{},
 	}
 
 	wg.Add(len(adjusters))
@@ -57,10 +58,4 @@ func determineSnakeAction(weightedOptions map[model.Direction]float64) *model.Sn
 		Move:  highestWeightedDirection,
 		Shout: fmt.Sprintf("Option weight: %v", highestWeight),
 	}
-}
-
-func (svc *BananatronV1Svc) applyScoreToSquare(weightedOptions *map[model.Direction]float64, direction model.Direction, score float64) {
-	svc.mux.Lock()
-	(*weightedOptions)[direction] += score
-	svc.mux.Unlock()
 }

@@ -11,9 +11,9 @@ import (
 
 const (
 	OccupiedSquarePenalty            = -9999
-	EnemyPotentialMovePenalty        = -4
-	CollisionCoursePenalty           = -10
-	CorneredSnakeEscapeSquarePenalty = -15
+	EnemyPotentialMovePenalty        = -5
+	CollisionCoursePenalty           = -8
+	CorneredSnakeEscapeSquarePenalty = -10
 )
 
 type WeightAdjuster interface {
@@ -153,6 +153,43 @@ func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(wg *sync.WaitGroup, weight
 			mux.Lock()
 			(*weightedOptions)[direction] += CorneredSnakeEscapeSquarePenalty
 			mux.Unlock()
+		}
+	}
+}
+
+type VoronoiControlAdjuster struct{}
+
+type QueueItem struct {
+	coord    model.Coord
+	distance int
+	ownerId  string
+}
+
+func (a *VoronoiControlAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
+	defer wg.Done()
+
+	// For each possible move, calculate how much space my snake would own if it moved there
+
+	// Multi-source BFS
+	var queue []QueueItem
+	for _, snake := range board.Snakes {
+		queue = append(queue, QueueItem{
+			coord:    model.Coord{X: snake.Head.X, Y: snake.Head.Y},
+			distance: 0,
+			ownerId:  snake.ID,
+		})
+	}
+	for len(queue) > 0 {
+		item := queue[0]
+		queue = queue[1:]
+
+		for _, direction := range model.AllDirections {
+			adjacentCoord := item.coord.GetSquareInDirection(direction)
+			if !board.IsCoordClear(*adjacentCoord) {
+				continue
+			}
+
+			newDist := item.distance + 1
 		}
 	}
 }
