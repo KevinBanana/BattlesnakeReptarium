@@ -2,11 +2,10 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/repo"
-
-	"github.com/pkg/errors"
 )
 
 type GameEngineService interface {
@@ -26,7 +25,7 @@ func NewGameEngineSvc(db repo.DB) *GameEngineSvc {
 
 func (svc *GameEngineSvc) StartGame(ctx context.Context, game model.Game, board model.Board, self model.Snake) error {
 	if err := svc.db.CreateGame(ctx, game); err != nil {
-		return errors.Wrap(err, "StartGame::failed to create game in DB")
+		return fmt.Errorf("StartGame::failed to create game in DB: %w", err)
 	}
 	return nil
 }
@@ -36,7 +35,7 @@ func (svc *GameEngineSvc) EndGame(ctx context.Context, game model.Game, board mo
 	game.IsWin = board.IsSnakeOnBoard(self)
 
 	if err := svc.db.UpdateGame(ctx, game); err != nil {
-		return errors.Wrap(err, "EndGame::failed to update game in DB")
+		return fmt.Errorf("EndGame::failed to update game in DB: %w", err)
 	}
 	return nil
 }

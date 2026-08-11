@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 
 	"BattlesnakeReptarium/internal/model"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -78,7 +78,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	log.WithField("move response", snakeAction)
+	log.Info("move response", snakeAction)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"move":  snakeAction.Move,

@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 

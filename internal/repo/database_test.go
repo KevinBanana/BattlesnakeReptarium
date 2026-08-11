@@ -64,9 +64,5 @@ func TestDatabase_GetGame(t *testing.T) {
 }
 
 func withDBSetup(testFunc func(db *Database)) {
-	db := Database{
-		games: make(map[string]*model.Game),
-	}
-
-	testFunc(&db)
+	testFunc(NewDatabase())
 }

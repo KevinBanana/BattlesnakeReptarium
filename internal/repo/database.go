@@ -2,11 +2,10 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"BattlesnakeReptarium/internal/model"
-
-	"github.com/pkg/errors"
 )
 
 type DB interface {
@@ -15,9 +14,14 @@ type DB interface {
 	UpdateGame(ctx context.Context, game model.Game) error
 }
 
+// Database is just an in-memory store. Games are lost when the process exits
 type Database struct {
 	sync.RWMutex
 	games map[string]*model.Game
+}
+
+func NewDatabase() *Database {
+	return &Database{games: make(map[string]*model.Game)}
 }
 
 func (db *Database) CreateGame(ctx context.Context, game model.Game) error {

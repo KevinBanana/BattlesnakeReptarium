@@ -84,8 +84,7 @@ func (b Board) FloodFill(startCoord Coord) []Coord {
 		return []Coord{}
 	}
 
-	visited := make(map[Coord]interface{})
-	var emptyCoords []Coord
+	visited := make(map[Coord]struct{})
 	queue := []Coord{startCoord}
 
 	for len(queue) > 0 {
@@ -94,11 +93,10 @@ func (b Board) FloodFill(startCoord Coord) []Coord {
 		if _, ok := visited[coord]; ok {
 			continue
 		}
-		visited[coord] = nil
+		visited[coord] = struct{}{}
 		for _, direction := range AllDirections {
 			neighbor := coord.GetCoordInDirection(direction)
 			if b.IsCoordClear(*neighbor) {
-				emptyCoords = append(emptyCoords, *neighbor)
 				queue = append(queue, *neighbor)
 			}
 		}
