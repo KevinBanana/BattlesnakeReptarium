@@ -77,8 +77,8 @@ func (b Board) IsCoordOnBoard(coord Coord) bool {
 	return true
 }
 
-// DetermineFloodFillCoords uses flood fill to get the cells connected to a given coord
-func (b Board) DetermineFloodFillCoords(startCoord Coord) []Coord {
+// FloodFill uses flood fill to get the cells connected to a given coord
+func (b Board) FloodFill(startCoord Coord) []Coord {
 	// Ensure the start coord is clear
 	if !b.IsCoordClear(startCoord) {
 		return []Coord{}
@@ -96,7 +96,7 @@ func (b Board) DetermineFloodFillCoords(startCoord Coord) []Coord {
 		}
 		visited[coord] = nil
 		for _, direction := range AllDirections {
-			neighbor := coord.GetSquareInDirection(direction)
+			neighbor := coord.GetCoordInDirection(direction)
 			if b.IsCoordClear(*neighbor) {
 				emptyCoords = append(emptyCoords, *neighbor)
 				queue = append(queue, *neighbor)
@@ -107,12 +107,12 @@ func (b Board) DetermineFloodFillCoords(startCoord Coord) []Coord {
 	return util.GetKeysFromMap(visited)
 }
 
-func (b Board) FindAllSnakesInCavern(cavernCoords []Coord) []Snake {
+func (b Board) SnakesInCavern(cavernCoords []Coord) []Snake {
 	var snakesInCavern []Snake
 	for _, snake := range b.Snakes {
 		// For each snake on board, look at the head and check if an adjacent coord is in the cavern
 		for _, direction := range AllDirections {
-			adjacentCoord := snake.Head.GetSquareInDirection(direction)
+			adjacentCoord := snake.Head.GetCoordInDirection(direction)
 			if util.Contains(cavernCoords, *adjacentCoord) {
 				snakesInCavern = append(snakesInCavern, snake)
 				break

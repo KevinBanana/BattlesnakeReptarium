@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/spf13/viper"
 )
@@ -13,13 +13,10 @@ type Config struct {
 	Port      uint16 `mapstructure:"port"`
 }
 
-var parsedConfig Config
-
-func Init(env string) {
+func Load(env string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigType("yaml")
 	v.SetConfigName(env)
-	v.AddConfigPath("../../config/")
 	v.AddConfigPath("config/")
 	v.AutomaticEnv()
 
@@ -27,13 +24,12 @@ func Init(env string) {
 	v.SetDefault("port", 80)
 
 	if err := v.ReadInConfig(); err != nil {
-		log.Fatalf("error parsing configuration file, %v", err)
+		return nil, fmt.Errorf("reading config %q: %w", env, err)
 	}
-	if err := v.Unmarshal(&parsedConfig); err != nil {
-		log.Fatalf("unable to decode into struct, %v", err)
-	}
-}
 
-func GetConfig() *Config {
-	return &parsedConfig
+	var conf Config
+	if err := v.Unmarshal(&conf); err != nil {
+		return nil, fmt.Errorf("decoding config: %w", err)
+	}
+	return &conf, nil
 }

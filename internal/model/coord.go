@@ -11,15 +11,15 @@ type Coord struct {
 	Y int `json:"y"`
 }
 
-// GetDistance returns the distance between two coordinates
+// DirectDistance returns the distance between two coordinates
 // Calculated as sqrt((x2-x1)^2 + (y2-y1)^2)
-func (c Coord) GetDistance(other Coord) float64 {
+func (c Coord) DirectDistance(other Coord) float64 {
 	xDist := math.Pow(float64(other.X-c.X), 2)
 	yDist := math.Pow(float64(other.Y-c.Y), 2)
 	return math.Sqrt(xDist + yDist)
 }
 
-func (c Coord) GetSquareInDirection(direction Direction) *Coord {
+func (c Coord) GetCoordInDirection(direction Direction) *Coord {
 	switch direction {
 	case UP:
 		return &Coord{X: c.X, Y: c.Y + 1}

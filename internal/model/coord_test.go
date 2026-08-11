@@ -28,7 +28,7 @@ func TestCoord_GetDistance(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.location1.GetDistance(tc.location2)
+			got := tc.location1.DirectDistance(tc.location2)
 			assert.Equal(t, tc.expectedDistance, got)
 		})
 	}
@@ -50,7 +50,7 @@ func TestCoord_GetSquareInDirection(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.start.GetSquareInDirection(tc.direction)
+			got := tc.start.GetCoordInDirection(tc.direction)
 			assert.Equal(t, tc.expected, got)
 		})
 	}

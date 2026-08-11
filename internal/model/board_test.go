@@ -77,7 +77,7 @@ func TestDetermineFloodFillCoords(t *testing.T) {
 		}
 		board.Snakes = snakes
 
-		got := board.DetermineFloodFillCoords(model.Coord{X: 0, Y: 0})
+		got := board.FloodFill(model.Coord{X: 0, Y: 0})
 		assert.Equal(t, 5, len(got))
 		want := []model.Coord{{X: 0, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: 2}, {X: 1, Y: 0}, {X: 2, Y: 0}}
 		if !unorderedEqual(got, want) {
@@ -90,7 +90,7 @@ func TestDetermineFloodFillCoords(t *testing.T) {
 		snakes := []model.Snake{{Body: []model.Coord{{X: 1, Y: 1}, {X: 1, Y: 2}, {X: 2, Y: 1}}}}
 		board.Snakes = snakes
 
-		got := board.DetermineFloodFillCoords(model.Coord{X: 0, Y: 0})
+		got := board.FloodFill(model.Coord{X: 0, Y: 0})
 		assert.Equal(t, 0, len(got))
 	})
 }
@@ -146,7 +146,7 @@ func TestFindAllSnakesInCavern(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := tt.board.FindAllSnakesInCavern(tt.cavernCoords)
+			got := tt.board.SnakesInCavern(tt.cavernCoords)
 			for _, snake := range got {
 				assert.Contains(t, tt.expectedSnakeIDs, snake.ID)
 			}

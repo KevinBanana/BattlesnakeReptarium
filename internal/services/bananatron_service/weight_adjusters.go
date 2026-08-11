@@ -27,7 +27,7 @@ func (a *OccupiedSquaresAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptio
 	defer wg.Done()
 
 	for _, direction := range model.AllDirections {
-		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
+		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
 		if !board.IsCoordClear(*targetSquare) {
 			// Coord is occupied, penalize option
 			mux.Lock()
@@ -51,15 +51,15 @@ func (a *CollisionCourseAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptio
 		if snake.ID == selfSnake.ID {
 			continue
 		}
-		snakeTravelDirection := snake.FindSnakeTravelDirection()
-		nextOccupiedCoord := snake.Head.GetSquareInDirection(snakeTravelDirection)
+		snakeTravelDirection := snake.TravelDirection()
+		nextOccupiedCoord := snake.Head.GetCoordInDirection(snakeTravelDirection)
 		if nextOccupiedCoord != nil {
 			nextOccupiedCoords = append(nextOccupiedCoords, *nextOccupiedCoord)
 		}
 	}
 
 	for _, direction := range model.AllDirections {
-		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
+		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is a collision course coord, penalize option
 			mux.Lock()
@@ -76,14 +76,14 @@ func (a *PotentialEnemyMoveAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOp
 	defer wg.Done()
 
 	for _, direction := range model.AllDirections {
-		potentialMoveSquare := selfSnake.Head.GetSquareInDirection(direction)
+		potentialMoveSquare := selfSnake.Head.GetCoordInDirection(direction)
 		for _, enemySnake := range board.Snakes {
 			// Exclude self
 			if enemySnake.ID == selfSnake.ID {
 				continue
 			}
 			for _, snakeDirection := range model.AllDirections {
-				potentialEnemyMoveSquare := enemySnake.Head.GetSquareInDirection(snakeDirection)
+				potentialEnemyMoveSquare := enemySnake.Head.GetCoordInDirection(snakeDirection)
 				if potentialEnemyMoveSquare != nil && *potentialEnemyMoveSquare == *potentialMoveSquare {
 					// Coord is a potential enemy move coord, penalize option
 					mux.Lock()
@@ -102,14 +102,14 @@ func (a *CavernSizeAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *m
 	defer wg.Done()
 
 	for _, direction := range model.AllDirections {
-		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
-		floodFillCoords := board.DetermineFloodFillCoords(*targetSquare)
+		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
+		floodFillCoords := board.FloodFill(*targetSquare)
 		if len(floodFillCoords) == 0 {
 			continue
 		}
 
 		// Divide the total squares by the number of players in the cavern since they will each consume a portion
-		snakesInCavern := board.FindAllSnakesInCavern(floodFillCoords)
+		snakesInCavern := board.SnakesInCavern(floodFillCoords)
 		if len(snakesInCavern) == 0 {
 			log.Error("Snakes in cavern is 0. Should have found at least self snake")
 			continue
@@ -136,7 +136,7 @@ func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(wg *sync.WaitGroup, weight
 		}
 		var clearOptions []model.Coord
 		for _, direction := range model.AllDirections {
-			targetSquare := snake.Head.GetSquareInDirection(direction)
+			targetSquare := snake.Head.GetCoordInDirection(direction)
 			if board.IsCoordClear(*targetSquare) {
 				clearOptions = append(clearOptions, *targetSquare)
 			}
@@ -147,7 +147,7 @@ func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(wg *sync.WaitGroup, weight
 	}
 
 	for _, direction := range model.AllDirections {
-		targetSquare := selfSnake.Head.GetSquareInDirection(direction)
+		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is an escape coord for cornered snake, penalize option
 			mux.Lock()

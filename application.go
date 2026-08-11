@@ -24,9 +24,12 @@ func getEnv() string {
 func main() {
 	env := getEnv()
 	log.Info(fmt.Sprintf("Starting application in %s environment", env))
-	config.Init(env)
-	logging.SetLogLevel(config.GetConfig().LogLevel)
+	conf, err := config.Load(env)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logging.SetLogLevel(conf.LogLevel)
 	log.SetFormatter(&log.JSONFormatter{})
 
-	server.Init()
+	server.Init(conf)
 }

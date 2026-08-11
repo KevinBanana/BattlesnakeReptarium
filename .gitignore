@@ -3,3 +3,4 @@ infrastructure/.terraform.tfstate.lock.info
 /.ssh/
 */.terraform/
 infrastructure/prod/.terraform/
+/.idea

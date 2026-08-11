@@ -33,10 +33,9 @@ func NewRouter(controller controllers.GameController) *gin.Engine {
 	return router
 }
 
-func Init() {
-	conf := config.GetConfig()
+func Init(conf *config.Config) {
 	db := repo.Database{}
-	botSvc := createSelectedBotService(conf.ActiveBot)
+	botSvc := newBotService(conf.ActiveBot)
 	gameEngineSvc := services.NewGameEngineSvc(&db)
 	controller := controllers.NewGameController(*botSvc, gameEngineSvc)
 	r := NewRouter(controller)
@@ -46,7 +45,7 @@ func Init() {
 	log.Fatal(r.Run(listenAddress))
 }
 
-func createSelectedBotService(activeBot string) *services.Bot {
+func newBotService(activeBot string) *services.Bot {
 	var botSvc services.Bot
 
 	switch activeBot {
