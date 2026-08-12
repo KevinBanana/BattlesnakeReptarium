@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine
+FROM golang:1.26-alpine
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY . ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /battlesnake-app
 
-# default port
-EXPOSE 80
+# default port (PORT env overrides the listen port at runtime)
+EXPOSE 8080
 
 CMD ["/battlesnake-app"]

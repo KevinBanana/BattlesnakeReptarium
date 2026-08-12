@@ -28,7 +28,15 @@ func NewRouter(controller controllers.GameController) http.Handler {
 	mux.HandleFunc("GET /{$}", controller.Health)
 
 	slog.Info("router created")
-	return logRequests(mux)
+	return logRequests(limitBody(mux))
+}
+
+// limitBody caps request bodies. 1 MB is a safe ceiling.
+func limitBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func Init(conf *config.Config) {
@@ -40,7 +48,16 @@ func Init(conf *config.Config) {
 
 	listenAddress := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
 	slog.Info("listening", "address", listenAddress)
-	if err := http.ListenAndServe(listenAddress, handler); err != nil {
+
+	srv := &http.Server{
+		Addr:              listenAddress,
+		Handler:           handler,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	if err := srv.ListenAndServe(); err != nil {
 		slog.Error("server exited", "err", err)
 		os.Exit(1)
 	}

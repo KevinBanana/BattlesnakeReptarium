@@ -1,64 +1,12 @@
-name: Prod Deploy
-
+name: Deploy
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Build and push Docker image to ECR
-        run: |
-          # Build the Docker image
-          docker build -t battlesnake-image .
-          
-          # Retrieve an ECR auth token and log in
-          aws ecr get-login-password --region us-east-1 \
-            | docker login --username AWS --password-stdin \
-              ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          
-          # Tag and push
-          docker tag battlesnake-image:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/battlesnake:latest
-
   deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: Check out infra repo
-        uses: actions/checkout@v3
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: infrastructure/prod
-
-      - name: Terraform Plan
-        working-directory: infrastructure/prod
-        run: terraform plan -input=false -out plan.out
-
-      - name: Terraform Apply
-        run: terraform apply -input=false -auto-approve
-        working-directory: infrastructure/prod
+      - uses: actions/checkout@v4
+      - run: docker compose up -d --build --remove-orphans

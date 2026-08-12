@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"BattlesnakeReptarium/internal/config"
-	"BattlesnakeReptarium/internal/logging"
 	"BattlesnakeReptarium/internal/server"
 )
 
@@ -28,7 +27,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	logging.Init(conf.LogLevel)
+	var lvl slog.Level
+	_ = lvl.UnmarshalText([]byte(conf.LogLevel))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl})))
+
 	slog.Info("starting application", "environment", env)
 
 	server.Init(conf)
