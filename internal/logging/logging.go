@@ -1,22 +1,27 @@
 package logging
 
-import log "github.com/sirupsen/logrus"
+import (
+	"log/slog"
+	"os"
+	"strings"
+)
 
-func SetLogLevel(level string) {
-	switch level {
-	case "TRACE":
-		log.SetLevel(log.TraceLevel)
-	case "DEBUG":
-		log.SetLevel(log.DebugLevel)
-	case "INFO":
-		log.SetLevel(log.InfoLevel)
-	case "WARN":
-		log.SetLevel(log.WarnLevel)
-	case "ERROR":
-		log.SetLevel(log.ErrorLevel)
-	case "FATAL":
-		log.SetLevel(log.FatalLevel)
+// Init installs a JSON slog logger as the process-wide default at the given
+// level. slog has no Trace or Fatal levels, so trace folds into Debug and fatal
+// into Error; anything unrecognized falls back to Info.
+func Init(level string) {
+	var lvl slog.Level
+	switch strings.ToLower(level) {
+	case "trace", "debug":
+		lvl = slog.LevelDebug
+	case "warn", "warning":
+		lvl = slog.LevelWarn
+	case "error", "fatal":
+		lvl = slog.LevelError
 	default:
-		log.SetLevel(log.InfoLevel)
+		lvl = slog.LevelInfo
 	}
+
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl})
+	slog.SetDefault(slog.New(handler))
 }

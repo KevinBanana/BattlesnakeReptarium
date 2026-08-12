@@ -1,4 +1,4 @@
-package bananatron_service
+package bananatron
 
 import (
 	"reflect"

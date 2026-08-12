@@ -8,7 +8,7 @@ import (
 
 func TestGame_CreateSelectedBot(t *testing.T) {
 	t.Run("banana_bot", func(t *testing.T) {
-		bot := newBotService(bananaBotV1)
+		bot := newBotService(botBananaBotV1)
 		assert.NotNil(t, bot)
 	})
 

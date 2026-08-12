@@ -1,9 +1,8 @@
 package model
 
 import (
+	"log/slog"
 	"math"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type Coord struct {
@@ -30,7 +29,7 @@ func (c Coord) GetCoordInDirection(direction Direction) *Coord {
 	case RIGHT:
 		return &Coord{X: c.X + 1, Y: c.Y}
 	default:
-		log.Error("Invalid Direction")
+		slog.Error("invalid direction")
 		return nil
 	}
 }

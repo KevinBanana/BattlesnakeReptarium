@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 
 	"BattlesnakeReptarium/internal/config"
 	"BattlesnakeReptarium/internal/logging"
 	"BattlesnakeReptarium/internal/server"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func getEnv() string {
@@ -23,13 +21,15 @@ func getEnv() string {
 
 func main() {
 	env := getEnv()
-	log.Info(fmt.Sprintf("Starting application in %s environment", env))
+
 	conf, err := config.Load(env)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to load config", "err", err)
+		os.Exit(1)
 	}
-	logging.SetLogLevel(conf.LogLevel)
-	log.SetFormatter(&log.JSONFormatter{})
+
+	logging.Init(conf.LogLevel)
+	slog.Info("starting application", "environment", env)
 
 	server.Init(conf)
 }

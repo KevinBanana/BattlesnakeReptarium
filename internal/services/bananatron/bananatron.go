@@ -1,4 +1,4 @@
-package bananatron_service
+package bananatron
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"BattlesnakeReptarium/internal/model"
 )
 
-type BananatronV1Svc struct {
+type Service struct {
 	mux sync.RWMutex
 }
 
-func NewBananatronSvc() *BananatronV1Svc {
-	return &BananatronV1Svc{}
+func New() *Service {
+	return &Service{}
 }
 
-func (svc *BananatronV1Svc) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
+func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	weightedOptions := map[model.Direction]float64{}
 	for i, direction := range model.AllDirections {
 		weightedOptions[direction] = float64(i) // Give default weight of i so that snake will prefer clockwise movement
@@ -57,10 +57,4 @@ func determineSnakeAction(weightedOptions map[model.Direction]float64) *model.Sn
 		Move:  highestWeightedDirection,
 		Shout: fmt.Sprintf("Option weight: %v", highestWeight),
 	}
-}
-
-func (svc *BananatronV1Svc) applyScoreToSquare(weightedOptions *map[model.Direction]float64, direction model.Direction, score float64) {
-	svc.mux.Lock()
-	(*weightedOptions)[direction] += score
-	svc.mux.Unlock()
 }

@@ -2,21 +2,22 @@ package server
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
 
 	"BattlesnakeReptarium/internal/config"
 	"BattlesnakeReptarium/internal/controllers"
 	"BattlesnakeReptarium/internal/repo"
 	"BattlesnakeReptarium/internal/services"
-	"BattlesnakeReptarium/internal/services/banana_bot_v1_service"
-	"BattlesnakeReptarium/internal/services/bananatron_service"
+	"BattlesnakeReptarium/internal/services/bananabot"
+	"BattlesnakeReptarium/internal/services/bananatron"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
-	bananaBotV1 = "banana_bot_v1"
-	bananatron  = "bananatron"
+	botBananaBotV1 = "banana_bot_v1"
+	botBananatron  = "bananatron"
 )
 
 func NewRouter(controller controllers.GameController) *gin.Engine {
@@ -29,7 +30,7 @@ func NewRouter(controller controllers.GameController) *gin.Engine {
 	router.POST("/move", controller.CalculateMove)
 	router.GET("/", controller.Health)
 
-	log.Info("Router created")
+	slog.Info("router created")
 	return router
 }
 
@@ -41,20 +42,23 @@ func Init(conf *config.Config) {
 	r := NewRouter(controller)
 
 	listenAddress := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
-	log.Info(fmt.Sprintf("Listening on %s", listenAddress))
-	log.Fatal(r.Run(listenAddress))
+	slog.Info("listening", "address", listenAddress)
+	if err := r.Run(listenAddress); err != nil {
+		slog.Error("server exited", "err", err)
+		os.Exit(1)
+	}
 }
 
 func newBotService(activeBot string) *services.Bot {
 	var botSvc services.Bot
 
 	switch activeBot {
-	case bananaBotV1:
-		botSvc = banana_bot_v1_service.NewBananaBotV1Svc()
-	case bananatron:
-		botSvc = bananatron_service.NewBananatronSvc()
+	case botBananaBotV1:
+		botSvc = bananabot.New()
+	case botBananatron:
+		botSvc = bananatron.New()
 	default:
-		log.Errorf("Cannot set active bot: '%s' not found", activeBot)
+		slog.Error("cannot set active bot: not found", "activeBot", activeBot)
 		return nil
 	}
 

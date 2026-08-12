@@ -1,12 +1,11 @@
-package bananatron_service
+package bananatron
 
 import (
+	"log/slog"
 	"sync"
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/util"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -111,7 +110,7 @@ func (a *CavernSizeAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *m
 		// Divide the total squares by the number of players in the cavern since they will each consume a portion
 		snakesInCavern := board.SnakesInCavern(floodFillCoords)
 		if len(snakesInCavern) == 0 {
-			log.Error("Snakes in cavern is 0. Should have found at least self snake")
+			slog.Error("snakes in cavern is 0, should have found at least self snake")
 			continue
 		}
 

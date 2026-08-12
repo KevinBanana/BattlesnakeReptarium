@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"BattlesnakeReptarium/internal/model"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	log "github.com/sirupsen/logrus"
 )
 
 type GameController struct {
@@ -70,7 +70,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	log.WithField("reqBody", reqBody).Info("move request received")
+	slog.Info("move request received", "reqBody", reqBody)
 
 	snakeAction, err := g.bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
@@ -78,7 +78,7 @@ func (g GameController) CalculateMove(ctx *gin.Context) {
 		return
 	}
 
-	log.Info("move response", snakeAction)
+	slog.Info("move response", "action", snakeAction)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"move":  snakeAction.Move,
