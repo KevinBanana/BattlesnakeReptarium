@@ -31,8 +31,7 @@ func NewRouter(controller controllers.GameController) http.Handler {
 	return logRequests(limitBody(mux))
 }
 
-// limitBody caps request bodies. Battlesnake payloads are a few KB; 1 MB is a
-// safe ceiling that stops a public client from exhausting memory.
+// limitBody caps request bodies. 1 MB is a safe ceiling.
 func limitBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
@@ -50,8 +49,6 @@ func Init(conf *config.Config) {
 	listenAddress := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
 	slog.Info("listening", "address", listenAddress)
 
-	// Timeouts guard the public endpoint against slow/hung connections
-	// (Slowloris). WriteTimeout stays generous for the Battlesnake move deadline.
 	srv := &http.Server{
 		Addr:              listenAddress,
 		Handler:           handler,
