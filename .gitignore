@@ -1,6 +1,4 @@
 config/local.yml
-infrastructure/.terraform.tfstate.lock.info
-/.ssh/
-*/.terraform/
-infrastructure/prod/.terraform/
 /.idea
+DEPLOY.md
+/.github/actions-runner

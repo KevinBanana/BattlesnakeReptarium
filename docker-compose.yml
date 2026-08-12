@@ -1,0 +1,11 @@
+services:
+  battlesnake:
+    build: .
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: prod
+      PORT: 8080
+    ports:
+      # Dedicated high host port, bound to loopback only. Tailscale Funnel
+      # (on the host) forwards HTTPS -> 127.0.0.1:47654
+      - "127.0.0.1:47654:8080"
