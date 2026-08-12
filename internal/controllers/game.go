@@ -1,15 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/services"
-
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 )
 
 type GameController struct {
@@ -24,74 +22,80 @@ func NewGameController(botSvc services.Bot, gameEngineSvc services.GameEngineSer
 	}
 }
 
-func (g GameController) StartGame(ctx *gin.Context) {
+func (g GameController) StartGame(w http.ResponseWriter, r *http.Request) {
 	var reqBody model.RequestBody
-	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	err := g.gameEngineSvc.StartGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
+	if err := g.gameEngineSvc.StartGame(r.Context(), reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, nil)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (g GameController) EndGame(ctx *gin.Context) {
+func (g GameController) EndGame(w http.ResponseWriter, r *http.Request) {
 	var reqBody model.RequestBody
-	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	err := g.gameEngineSvc.EndGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
+	if err := g.gameEngineSvc.EndGame(r.Context(), reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, nil)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (g GameController) CalculateMove(ctx *gin.Context) {
+func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request) {
 	if g.bot == nil {
-		ctx.JSON(http.StatusInternalServerError, gin.Error{
-			Err: errors.New("bot not set"),
-		})
+		writeError(w, http.StatusInternalServerError, errors.New("bot not set"))
 		return
 	}
 
 	var reqBody model.RequestBody
-	if err := ctx.ShouldBindBodyWith(&reqBody, binding.JSON); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	slog.Info("move request received", "reqBody", reqBody)
 
-	snakeAction, err := g.bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
+	snakeAction, err := g.bot.CalculateMove(r.Context(), reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err})
+		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	slog.Info("move response", "action", snakeAction)
 
-	ctx.JSON(http.StatusOK, gin.H{
+	writeJSON(w, http.StatusOK, map[string]any{
 		"move":  snakeAction.Move,
 		"shout": snakeAction.Shout,
 	})
 }
 
-func (g GameController) Health(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
+func (g GameController) Health(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]string{
 		"apiversion": "1",
 		"author":     "Kevin Bonanno",
 		"color":      "#e8f008",
 		"head":       "fang",
 		"tail":       "round-bum",
 	})
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(v)
+}
+
+func writeError(w http.ResponseWriter, status int, err error) {
+	writeJSON(w, status, map[string]string{"error": err.Error()})
 }
