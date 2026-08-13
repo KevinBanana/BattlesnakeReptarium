@@ -1,0 +1,4 @@
+- Set up sqlite for storing past games
+- Machine learning bot?
+- Support multiple bots simultaneously
+- 

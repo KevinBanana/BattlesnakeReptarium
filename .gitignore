@@ -2,3 +2,4 @@ config/local.yml
 /.idea
 DEPLOY.md
 /.github/actions-runner
+TODO.md

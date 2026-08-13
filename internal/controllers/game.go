@@ -2,27 +2,47 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
+	"slices"
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/services"
 )
 
 type GameController struct {
-	bot           services.Bot
+	bots          map[string]services.Bot
 	gameEngineSvc services.GameEngineService
 }
 
-func NewGameController(botSvc services.Bot, gameEngineSvc services.GameEngineService) GameController {
+func NewGameController(bots map[string]services.Bot, gameEngineSvc services.GameEngineService) GameController {
 	return GameController{
-		bot:           botSvc,
+		bots:          bots,
 		gameEngineSvc: gameEngineSvc,
 	}
 }
 
-func (g GameController) StartGame(w http.ResponseWriter, r *http.Request) {
+type botHandler func(w http.ResponseWriter, r *http.Request, bot services.Bot)
+
+// WithBot resolves the {bot} path segment before handing off, 404ing if the
+// name is unknown.
+func (g GameController) WithBot(h botHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := r.PathValue("bot")
+
+		bot, ok := g.bots[name]
+		if !ok {
+			writeError(w, http.StatusNotFound, fmt.Errorf("unknown bot %q", name))
+			return
+		}
+
+		h(w, r, bot)
+	}
+}
+
+func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, _ services.Bot) {
 	var reqBody model.RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		writeError(w, http.StatusBadRequest, err)
@@ -37,7 +57,7 @@ func (g GameController) StartGame(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (g GameController) EndGame(w http.ResponseWriter, r *http.Request) {
+func (g GameController) EndGame(w http.ResponseWriter, r *http.Request, _ services.Bot) {
 	var reqBody model.RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		writeError(w, http.StatusBadRequest, err)
@@ -52,12 +72,7 @@ func (g GameController) EndGame(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request) {
-	if g.bot == nil {
-		writeError(w, http.StatusInternalServerError, errors.New("bot not set"))
-		return
-	}
-
+func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request, bot services.Bot) {
 	var reqBody model.RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		writeError(w, http.StatusBadRequest, err)
@@ -66,7 +81,7 @@ func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("move request received", "reqBody", reqBody)
 
-	snakeAction, err := g.bot.CalculateMove(r.Context(), reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
+	snakeAction, err := bot.CalculateMove(r.Context(), reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
@@ -80,13 +95,26 @@ func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (g GameController) Health(w http.ResponseWriter, r *http.Request) {
+// Info returns metadata for a specific snake bot. apiversion and author are
+// the same for every snake, only the customizations differ.
+func (g GameController) Info(w http.ResponseWriter, _ *http.Request, bot services.Bot) {
+	customizations := bot.Customizations()
+
 	writeJSON(w, http.StatusOK, map[string]string{
 		"apiversion": "1",
 		"author":     "Kevin Bonanno",
-		"color":      "#e8f008",
-		"head":       "fang",
-		"tail":       "round-bum",
+		"color":      customizations.Color,
+		"head":       customizations.Head,
+		"tail":       customizations.Tail,
+	})
+}
+
+func (g GameController) Health(w http.ResponseWriter, r *http.Request) {
+	bots := slices.Sorted(maps.Keys(g.bots))
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status": "ok",
+		"bots":   bots,
 	})
 }
 

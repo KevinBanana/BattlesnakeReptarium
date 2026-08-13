@@ -17,6 +17,14 @@ func New() *Service {
 	return &Service{}
 }
 
+func (svc *Service) Customizations() model.SnakeCustomizations {
+	return model.SnakeCustomizations{
+		Head:  "moto-helmet",
+		Tail:  "nr-booster",
+		Color: "#00e5ff",
+	}
+}
+
 func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	weightedOptions := map[model.Direction]float64{}
 	for i, direction := range model.AllDirections {

@@ -7,5 +7,6 @@ import (
 )
 
 type Bot interface {
+	Customizations() model.SnakeCustomizations
 	CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, self model.Snake) (*model.SnakeAction, error)
 }

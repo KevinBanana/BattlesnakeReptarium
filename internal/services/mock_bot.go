@@ -49,3 +49,15 @@ func (mr *MockBotMockRecorder) CalculateMove(ctx, game, turn, board, self interf
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateMove", reflect.TypeOf((*MockBot)(nil).CalculateMove), ctx, game, turn, board, self)
 }
+
+func (m *MockBot) Customizations() model.SnakeCustomizations {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Customizations")
+	ret0, _ := ret[0].(model.SnakeCustomizations)
+	return ret0
+}
+
+func (mr *MockBotMockRecorder) Customizations() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Customizations", reflect.TypeOf((*MockBot)(nil).Customizations))
+}

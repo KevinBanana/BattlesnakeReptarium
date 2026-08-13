@@ -7,10 +7,9 @@ import (
 )
 
 type Config struct {
-	ActiveBot string `mapstructure:"active_bot"`
-	Host      string `mapstructure:"host"`
-	LogLevel  string `mapstructure:"log_level"`
-	Port      uint16 `mapstructure:"port"`
+	Host     string `mapstructure:"host"`
+	LogLevel string `mapstructure:"log_level"`
+	Port     uint16 `mapstructure:"port"`
 }
 
 func Load(env string) (*Config, error) {
