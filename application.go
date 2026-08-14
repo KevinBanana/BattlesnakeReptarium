@@ -36,9 +36,9 @@ func main() {
 	// request context onto every line, so call sites only need log/slog and
 	// the *Context log variants.
 	handler := slogctx.NewHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl}), nil)
-	slog.SetDefault(slog.New(handler).With("env", env))
+	slog.SetDefault(slog.New(handler))
 
-	slog.Info("starting application")
+	slog.Info("starting application", "env", env)
 
 	server.Init(conf)
 }

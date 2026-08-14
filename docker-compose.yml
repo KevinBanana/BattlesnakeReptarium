@@ -3,12 +3,12 @@ services:
     build: .
     restart: unless-stopped
     environment:
-      ENVIRONMENT: prod
+      ENVIRONMENT: ${ENVIRONMENT:-prod}
       PORT: 8080
     ports:
       # Dedicated high host port, bound to loopback only. Tailscale Funnel
       # (on the host) forwards HTTPS -> 127.0.0.1:47654
-      - "127.0.0.1:47654:8080"
+      - "127.0.0.1:${HOST_PORT:-47654}:8080"
     depends_on:
       - loki
     logging:
@@ -16,11 +16,11 @@ services:
       options:
         loki-url: "http://127.0.0.1:3100/loki/api/v1/push"
         loki-retries: "2"
-        loki-external-labels: "job=battlesnake,container={{.Name}}"
+        loki-external-labels: "job=battlesnake,service_name=battlesnake,env=${ENVIRONMENT:-prod},container={{.Name}}"
         mode: "non-blocking"
 
   loki:
-    image: grafana/loki:3.3.2
+    image: grafana/loki:3.7.2
     restart: unless-stopped
     ports:
       - "127.0.0.1:3100:3100"
