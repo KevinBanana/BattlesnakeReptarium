@@ -24,25 +24,26 @@ type SnakeAction struct {
 	Shout string    `json:"shout"`
 }
 
-// TravelDirection returns the direction a snake last moved in
-// It does this by determining where the head of the snake is in relation to the first body segment
-func (s Snake) TravelDirection() Direction {
-	// Find which direction the head is in from the first body segment
+// TravelDirection returns the direction a snake last moved in, determined by
+// where the head sits relative to the first body segment.
+//
+// ok is false when the snake has no travel direction yet
+func (s Snake) TravelDirection() (direction Direction, ok bool) {
 	if len(s.Body) <= 1 { // Snake is only a head
-		return ""
+		return "", false
 	}
 	body := s.Body[1]
 	if s.Head == *body.GetCoordInDirection(UP) {
-		return UP
+		return UP, true
 	}
 	if s.Head == *body.GetCoordInDirection(DOWN) {
-		return DOWN
+		return DOWN, true
 	}
 	if s.Head == *body.GetCoordInDirection(LEFT) {
-		return LEFT
+		return LEFT, true
 	}
 	if s.Head == *body.GetCoordInDirection(RIGHT) {
-		return RIGHT
+		return RIGHT, true
 	}
-	return ""
+	return "", false
 }

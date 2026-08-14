@@ -51,7 +51,12 @@ func (a *CollisionCourseAdjuster) AdjustWeight(ctx context.Context, wg *sync.Wai
 		if snake.ID == selfSnake.ID {
 			continue
 		}
-		snakeTravelDirection := snake.TravelDirection()
+		// A snake that has not moved yet has nothing to extrapolate from.
+		snakeTravelDirection, ok := snake.TravelDirection()
+		if !ok {
+			continue
+		}
+
 		nextOccupiedCoord := snake.Head.GetCoordInDirection(snakeTravelDirection)
 		if nextOccupiedCoord != nil {
 			nextOccupiedCoords = append(nextOccupiedCoords, *nextOccupiedCoord)
