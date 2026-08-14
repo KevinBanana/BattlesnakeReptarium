@@ -26,6 +26,7 @@ func Observe(route, bot, method string, status int, took time.Duration) {
 }
 
 func Classify(path string, knownBots map[string]bool) (route, bot string) {
+	trimmed := strings.Trim(path, "/")
 	switch trimmed {
 	case "":
 		return "/", ""
