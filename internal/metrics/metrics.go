@@ -16,10 +16,34 @@ import (
 var requestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Name:    "battlesnake_request_duration_seconds",
 	Help:    "HTTP request latency in seconds, by route.",
-	Buckets: []float64{.001, .0025, .005, .01, .025, .05, .1, .25, .5, 1},
+	Buckets: []float64{.001, .0025, .005, .01, .025, .05, .1, .2, .3, .4, .5, 1},
 }, []string{"route", "bot", "method", "status"})
 
+var gamesFinished = promauto.NewCounterVec(prometheus.CounterOpts{
+	Name: "battlesnake_games_finished_total",
+	Help: "Games finished, by bot and result.",
+}, []string{"bot", "result"})
+
 func Handler() http.Handler { return promhttp.Handler() }
+
+// InitGameCounters registers every bot/result series at zero. Without it a
+// series first appears with value 1, increase() never sees the 0->1 rise, and
+// win rate reads NaN until the second game. It also makes the panel show 0%
+// rather than "No data" before any game finishes.
+func InitGameCounters(bots map[string]bool) {
+	for bot := range bots {
+		gamesFinished.WithLabelValues(bot, "win").Add(0)
+		gamesFinished.WithLabelValues(bot, "loss").Add(0)
+	}
+}
+
+func ObserveGameFinished(bot string, win bool) {
+	result := "loss"
+	if win {
+		result = "win"
+	}
+	gamesFinished.WithLabelValues(bot, result).Inc()
+}
 
 func Observe(route, bot, method string, status int, took time.Duration) {
 	requestDuration.WithLabelValues(route, bot, method, strconv.Itoa(status)).Observe(took.Seconds())

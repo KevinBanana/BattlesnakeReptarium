@@ -36,6 +36,8 @@ func NewRouter(controller controllers.GameController, bots map[string]services.B
 		knownBots[name] = true
 	}
 
+	metrics.InitGameCounters(knownBots)
+
 	slog.Info("router created")
 	return observe(mux, knownBots)
 }

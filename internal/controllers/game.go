@@ -9,6 +9,7 @@ import (
 
 	slogctx "github.com/veqryn/slog-context"
 
+	"BattlesnakeReptarium/internal/metrics"
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/services"
 )
@@ -76,14 +77,17 @@ func (g GameController) EndGame(w http.ResponseWriter, r *http.Request, _ servic
 
 	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
 
-	if err := g.gameEngineSvc.EndGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
+	finished, err := g.gameEngineSvc.EndGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake)
+	if err != nil {
 		slog.ErrorContext(ctx, "failed to end game", "err", err)
 		writeStatus(w, http.StatusInternalServerError)
 		return
 	}
 
+	metrics.ObserveGameFinished(r.PathValue("bot"), finished.IsWin)
+
 	slog.InfoContext(ctx, "game ended",
-		"win", reqBody.Game.IsWin,
+		"win", finished.IsWin,
 		"turns", reqBody.Turn,
 		"length", reqBody.SelfSnake.Length,
 		"health", reqBody.SelfSnake.Health,

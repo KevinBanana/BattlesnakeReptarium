@@ -8,6 +8,11 @@ import (
 	"BattlesnakeReptarium/internal/model"
 )
 
+// ErrGameNotFound is a sentinel so callers can react to a missing game without
+// matching on error strings. It is routine after a restart: games live only in
+// memory, and a deploy mid-game loses them.
+var ErrGameNotFound = errors.New("game not found")
+
 type DB interface {
 	CreateGame(ctx context.Context, game model.Game) error
 	GetGame(ctx context.Context, id string) (*model.Game, error)
@@ -47,7 +52,7 @@ func (db *Database) GetGame(ctx context.Context, id string) (*model.Game, error)
 	var ok bool
 
 	if retrievedGame, ok = db.games[id]; !ok {
-		return nil, errors.New("game not found")
+		return nil, ErrGameNotFound
 	}
 	return retrievedGame, nil
 }
@@ -57,7 +62,7 @@ func (db *Database) UpdateGame(ctx context.Context, game model.Game) error {
 	defer db.Unlock()
 
 	if _, ok := db.games[game.ID]; !ok {
-		return errors.New("game not found")
+		return ErrGameNotFound
 	}
 
 	db.games[game.ID] = &game
