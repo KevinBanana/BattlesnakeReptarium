@@ -12,7 +12,8 @@ import (
 )
 
 func TestGame_Routes(t *testing.T) {
-	router := NewRouter(controllers.NewGameController(newBots(), nil))
+	bots := newBots()
+	router := NewRouter(controllers.NewGameController(bots, nil), bots)
 
 	cases := map[string]struct {
 		method, path string
@@ -25,7 +26,7 @@ func TestGame_Routes(t *testing.T) {
 		"bot move":         {http.MethodPost, "/bananabot/move", http.StatusOK},
 		"unknown bot move": {http.MethodPost, "/not_a_bot/move", http.StatusNotFound},
 		"unknown bot end":  {http.MethodPost, "/not_a_bot/end", http.StatusNotFound},
-		"root move": {http.MethodPost, "/move", http.StatusMethodNotAllowed},
+		"root move":        {http.MethodPost, "/move", http.StatusMethodNotAllowed},
 	}
 
 	for name, tc := range cases {

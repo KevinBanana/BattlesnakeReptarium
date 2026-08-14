@@ -27,6 +27,17 @@ services:
     volumes:
       - loki-data:/loki
 
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   grafana:
     image: grafana/grafana:11.4.0
     restart: unless-stopped
@@ -35,6 +46,8 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     environment:
       # No login because the only route in is Tailscale, which already authenticates.
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -43,4 +56,5 @@ services:
 
 volumes:
   loki-data:
+  prometheus-data:
   grafana-data:

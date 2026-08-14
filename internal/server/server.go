@@ -11,14 +11,17 @@ import (
 
 	"BattlesnakeReptarium/internal/config"
 	"BattlesnakeReptarium/internal/controllers"
+	"BattlesnakeReptarium/internal/metrics"
 	"BattlesnakeReptarium/internal/repo"
 	"BattlesnakeReptarium/internal/services"
 	"BattlesnakeReptarium/internal/services/bananabot"
 	"BattlesnakeReptarium/internal/services/bananatron"
 )
 
-func NewRouter(controller controllers.GameController) http.Handler {
+func NewRouter(controller controllers.GameController, bots map[string]services.Bot) http.Handler {
 	mux := http.NewServeMux()
+
+	mux.Handle("GET /metrics", metrics.Handler())
 
 	mux.HandleFunc("GET /{$}", controller.Health)
 	mux.HandleFunc("GET /{bot}", controller.WithBot(controller.Info))
@@ -28,15 +31,21 @@ func NewRouter(controller controllers.GameController) http.Handler {
 	mux.HandleFunc("POST /{bot}/end", controller.WithBot(controller.EndGame))
 	mux.HandleFunc("POST /{bot}/move", controller.WithBot(controller.CalculateMove))
 
+	knownBots := make(map[string]bool, len(bots))
+	for name := range bots {
+		knownBots[name] = true
+	}
+
 	slog.Info("router created")
-	return logRequests(mux)
+	return observe(mux, knownBots)
 }
 
 func Init(conf *config.Config) {
 	db := repo.NewDatabase()
 	gameEngineSvc := services.NewGameEngineSvc(db)
-	controller := controllers.NewGameController(newBots(), gameEngineSvc)
-	handler := NewRouter(controller)
+	bots := newBots()
+	controller := controllers.NewGameController(bots, gameEngineSvc)
+	handler := NewRouter(controller, bots)
 
 	listenAddress := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
 	slog.Info("listening", "address", listenAddress)
@@ -63,7 +72,7 @@ func newBots() map[string]services.Bot {
 	}
 }
 
-func logRequests(next http.Handler) http.Handler {
+func observe(next http.Handler, knownBots map[string]bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		ctx := slogctx.Prepend(r.Context(), "method", r.Method, "path", r.URL.Path)
@@ -71,9 +80,16 @@ func logRequests(next http.Handler) http.Handler {
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rec, r.WithContext(ctx))
 
+		took := time.Since(start)
+		route, bot := metrics.Classify(r.URL.Path, knownBots)
+		metrics.Observe(route, bot, r.Method, rec.status, took)
+
+		if route == "/metrics" {
+			return
+		}
 		slog.InfoContext(ctx, "request",
 			"status", rec.status,
-			"duration", time.Since(start),
+			"duration", took,
 		)
 	})
 }
