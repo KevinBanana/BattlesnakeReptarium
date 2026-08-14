@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"slices"
 
+	slogctx "github.com/veqryn/slog-context"
+
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/services"
 )
@@ -38,7 +40,8 @@ func (g GameController) WithBot(h botHandler) http.HandlerFunc {
 			return
 		}
 
-		h(w, r, bot)
+		ctx := slogctx.Prepend(r.Context(), "bot", name)
+		h(w, r.WithContext(ctx), bot)
 	}
 }
 
@@ -49,10 +52,14 @@ func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, _ serv
 		return
 	}
 
-	if err := g.gameEngineSvc.StartGame(r.Context(), reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
+	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
+
+	if err := g.gameEngineSvc.StartGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
+
+	slog.InfoContext(ctx, "game started", "ruleset", reqBody.Game.Ruleset.Name, "map", reqBody.Game.Map)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -64,10 +71,19 @@ func (g GameController) EndGame(w http.ResponseWriter, r *http.Request, _ servic
 		return
 	}
 
-	if err := g.gameEngineSvc.EndGame(r.Context(), reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
+	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
+
+	if err := g.gameEngineSvc.EndGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
+
+	slog.InfoContext(ctx, "game ended",
+		"win", reqBody.Game.IsWin,
+		"turns", reqBody.Turn,
+		"length", reqBody.SelfSnake.Length,
+		"health", reqBody.SelfSnake.Health,
+	)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -79,15 +95,23 @@ func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request, bo
 		return
 	}
 
-	slog.Info("move request received", "reqBody", reqBody)
+	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID, "turn", reqBody.Turn)
 
-	snakeAction, err := bot.CalculateMove(r.Context(), reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
+	slog.InfoContext(ctx, "move request received",
+		"health", reqBody.SelfSnake.Health,
+		"length", reqBody.SelfSnake.Length,
+		"head", reqBody.SelfSnake.Head,
+		"snakes", len(reqBody.Board.Snakes),
+	)
+	slog.DebugContext(ctx, "board state", "board", reqBody.Board)
+
+	snakeAction, err := bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	slog.Info("move response", "action", snakeAction)
+	slog.InfoContext(ctx, "move response", "action", snakeAction)
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"move":  snakeAction.Move,

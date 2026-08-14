@@ -58,7 +58,7 @@ func TestOccupiedSquaresAdjuster(t *testing.T) {
 
 			adjuster := &OccupiedSquaresAdjuster{}
 			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -94,7 +94,7 @@ func TestCollisionCourseAdjuster(t *testing.T) {
 
 			adjuster := &CollisionCourseAdjuster{}
 			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -141,7 +141,7 @@ func TestCavernSizeAdjuster(t *testing.T) {
 
 			adjuster := &CavernSizeAdjuster{}
 			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -172,7 +172,7 @@ func TestAvoidingCorneredSnakesAdjuster(t *testing.T) {
 
 			adjuster := &AvoidingCorneredSnakesAdjuster{}
 			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -219,7 +219,7 @@ func TestPotentialEnemyMoveAdjuster(t *testing.T) {
 
 			adjuster := &PotentialEnemyMoveAdjuster{}
 			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}

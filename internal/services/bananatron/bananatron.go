@@ -43,7 +43,7 @@ func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int
 
 	wg.Add(len(adjusters))
 	for _, adjuster := range adjusters {
-		go adjuster.AdjustWeight(wg, &weightedOptions, selfSnake, board, &svc.mux)
+		go adjuster.AdjustWeight(ctx, wg, &weightedOptions, selfSnake, board, &svc.mux)
 	}
 	wg.Wait()
 

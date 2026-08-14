@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	slogctx "github.com/veqryn/slog-context"
+
 	"BattlesnakeReptarium/internal/config"
 	"BattlesnakeReptarium/internal/controllers"
 	"BattlesnakeReptarium/internal/repo"
@@ -64,11 +66,12 @@ func newBots() map[string]services.Bot {
 func logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+		ctx := slogctx.Prepend(r.Context(), "method", r.Method, "path", r.URL.Path)
+
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
-		next.ServeHTTP(rec, r)
-		slog.Info("request",
-			"method", r.Method,
-			"path", r.URL.Path,
+		next.ServeHTTP(rec, r.WithContext(ctx))
+
+		slog.InfoContext(ctx, "request",
 			"status", rec.status,
 			"duration", time.Since(start),
 		)

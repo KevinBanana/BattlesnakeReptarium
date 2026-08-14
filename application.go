@@ -4,6 +4,8 @@ import (
 	"log/slog"
 	"os"
 
+	slogctx "github.com/veqryn/slog-context"
+
 	"BattlesnakeReptarium/internal/config"
 	"BattlesnakeReptarium/internal/server"
 )
@@ -29,9 +31,14 @@ func main() {
 
 	var lvl slog.Level
 	_ = lvl.UnmarshalText([]byte(conf.LogLevel))
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl})))
 
-	slog.Info("starting application", "environment", env)
+	// slogctx.NewHandler pulls attributes that slogctx.Prepend stashed on the
+	// request context onto every line, so call sites only need log/slog and
+	// the *Context log variants.
+	handler := slogctx.NewHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl}), nil)
+	slog.SetDefault(slog.New(handler).With("env", env))
+
+	slog.Info("starting application")
 
 	server.Init(conf)
 }

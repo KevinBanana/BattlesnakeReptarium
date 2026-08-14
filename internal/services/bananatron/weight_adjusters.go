@@ -1,6 +1,7 @@
 package bananatron
 
 import (
+	"context"
 	"log/slog"
 	"sync"
 
@@ -16,13 +17,13 @@ const (
 )
 
 type WeightAdjuster interface {
-	AdjustWeight(wg *sync.WaitGroup, options *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex)
+	AdjustWeight(ctx context.Context, wg *sync.WaitGroup, options *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex)
 }
 
 // OccupiedSquaresAdjuster If a square is occupied, severely penalize that square
 type OccupiedSquaresAdjuster struct{}
 
-func (a *OccupiedSquaresAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
+func (a *OccupiedSquaresAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
 	defer wg.Done()
 
 	for _, direction := range model.AllDirections {
@@ -41,7 +42,7 @@ func (a *OccupiedSquaresAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptio
 // it is not guaranteed the enemy will continue straight.
 type CollisionCourseAdjuster struct{}
 
-func (a *CollisionCourseAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
+func (a *CollisionCourseAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
 	defer wg.Done()
 
 	var nextOccupiedCoords []model.Coord
@@ -71,7 +72,7 @@ func (a *CollisionCourseAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptio
 // PotentialEnemyMoveAdjuster If an enemy snake could move onto a square, penalize that square
 type PotentialEnemyMoveAdjuster struct{}
 
-func (a *PotentialEnemyMoveAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
+func (a *PotentialEnemyMoveAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
 	defer wg.Done()
 
 	for _, direction := range model.AllDirections {
@@ -97,7 +98,7 @@ func (a *PotentialEnemyMoveAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOp
 // CavernSizeAdjuster uses flood fill to determine how many open squares are reachable from each direction
 type CavernSizeAdjuster struct{}
 
-func (a *CavernSizeAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
+func (a *CavernSizeAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
 	defer wg.Done()
 
 	for _, direction := range model.AllDirections {
@@ -110,7 +111,10 @@ func (a *CavernSizeAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *m
 		// Divide the total squares by the number of players in the cavern since they will each consume a portion
 		snakesInCavern := board.SnakesInCavern(floodFillCoords)
 		if len(snakesInCavern) == 0 {
-			slog.Error("snakes in cavern is 0, should have found at least self snake")
+			slog.ErrorContext(ctx, "snakes in cavern is 0, should have found at least self snake",
+				"direction", direction,
+				"target", targetSquare,
+			)
 			continue
 		}
 
@@ -124,7 +128,7 @@ func (a *CavernSizeAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *m
 // AvoidingCorneredSnakesAdjuster When an enemy snake has only one valid move, avoid moving to that coord
 type AvoidingCorneredSnakesAdjuster struct{}
 
-func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
+func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
 	defer wg.Done()
 
 	var nextOccupiedCoords []model.Coord // Tracks escape coords for cornered snakes

@@ -7,12 +7,14 @@ toolchain go1.26.5
 require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.3
+	github.com/veqryn/slog-context v0.9.0
 	go.uber.org/mock v0.2.0
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

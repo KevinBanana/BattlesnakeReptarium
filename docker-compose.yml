@@ -9,3 +9,38 @@ services:
       # Dedicated high host port, bound to loopback only. Tailscale Funnel
       # (on the host) forwards HTTPS -> 127.0.0.1:47654
       - "127.0.0.1:47654:8080"
+    depends_on:
+      - loki
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://127.0.0.1:3100/loki/api/v1/push"
+        loki-retries: "2"
+        loki-external-labels: "job=battlesnake,container={{.Name}}"
+        mode: "non-blocking"
+
+  loki:
+    image: grafana/loki:3.3.2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - loki-data:/loki
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    environment:
+      # No login because the only route in is Tailscale, which already authenticates.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+
+volumes:
+  loki-data:
+  grafana-data:
