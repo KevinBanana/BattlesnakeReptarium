@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"maps"
 	"net/http"
@@ -36,7 +35,8 @@ func (g GameController) WithBot(h botHandler) http.HandlerFunc {
 
 		bot, ok := g.bots[name]
 		if !ok {
-			writeError(w, http.StatusNotFound, fmt.Errorf("unknown bot %q", name))
+			slog.WarnContext(r.Context(), "unknown bot", "bot", name)
+			writeStatus(w, http.StatusNotFound)
 			return
 		}
 
@@ -48,14 +48,16 @@ func (g GameController) WithBot(h botHandler) http.HandlerFunc {
 func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, _ services.Bot) {
 	var reqBody model.RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		writeError(w, http.StatusBadRequest, err)
+		slog.WarnContext(r.Context(), "invalid request body", "err", err)
+		writeStatus(w, http.StatusBadRequest)
 		return
 	}
 
 	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
 
 	if err := g.gameEngineSvc.StartGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
-		writeError(w, http.StatusInternalServerError, err)
+		slog.ErrorContext(ctx, "failed to start game", "err", err)
+		writeStatus(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -67,14 +69,16 @@ func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, _ serv
 func (g GameController) EndGame(w http.ResponseWriter, r *http.Request, _ services.Bot) {
 	var reqBody model.RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		writeError(w, http.StatusBadRequest, err)
+		slog.WarnContext(r.Context(), "invalid request body", "err", err)
+		writeStatus(w, http.StatusBadRequest)
 		return
 	}
 
 	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
 
 	if err := g.gameEngineSvc.EndGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
-		writeError(w, http.StatusInternalServerError, err)
+		slog.ErrorContext(ctx, "failed to end game", "err", err)
+		writeStatus(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -91,7 +95,8 @@ func (g GameController) EndGame(w http.ResponseWriter, r *http.Request, _ servic
 func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request, bot services.Bot) {
 	var reqBody model.RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		writeError(w, http.StatusBadRequest, err)
+		slog.WarnContext(r.Context(), "invalid request body", "err", err)
+		writeStatus(w, http.StatusBadRequest)
 		return
 	}
 
@@ -107,7 +112,8 @@ func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request, bo
 
 	snakeAction, err := bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err)
+		slog.ErrorContext(ctx, "failed to calculate move", "err", err)
+		writeStatus(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -148,6 +154,9 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-func writeError(w http.ResponseWriter, status int, err error) {
-	writeJSON(w, status, map[string]string{"error": err.Error()})
+// writeStatus replies with the status text only. The snake is public via
+// Funnel, so internal error detail stays in the log and never reaches the
+// client.
+func writeStatus(w http.ResponseWriter, status int) {
+	writeJSON(w, status, map[string]string{"error": http.StatusText(status)})
 }
