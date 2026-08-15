@@ -78,7 +78,7 @@ func TestGame_StartGame(t *testing.T) {
 			b.mockGameEngine.EXPECT().StartGame(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 			c := b.controller()
-			c.WithBot(c.StartGame)(b.w, botRequest(http.MethodPost, testBot, "/start", defaultRequest))
+			c.WithGame(c.StartGame)(b.w, botRequest(http.MethodPost, testBot, "/start", defaultRequest))
 			assert.Equal(t, http.StatusOK, b.w.Code)
 		})
 	})
@@ -86,7 +86,7 @@ func TestGame_StartGame(t *testing.T) {
 	t.Run("Bad request", func(t *testing.T) {
 		withGameSetup(t, func(b gameTestBundle) {
 			c := b.controller()
-			c.WithBot(c.StartGame)(b.w, botRequest(http.MethodPost, testBot, "/start", "bad request"))
+			c.WithGame(c.StartGame)(b.w, botRequest(http.MethodPost, testBot, "/start", "bad request"))
 			assert.Equal(t, http.StatusBadRequest, b.w.Code)
 		})
 	})
@@ -96,7 +96,7 @@ func TestGame_StartGame(t *testing.T) {
 			b.mockGameEngine.EXPECT().StartGame(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 
 			c := b.controller()
-			c.WithBot(c.StartGame)(b.w, botRequest(http.MethodPost, "not_a_bot", "/start", defaultRequest))
+			c.WithGame(c.StartGame)(b.w, botRequest(http.MethodPost, "not_a_bot", "/start", defaultRequest))
 			assert.Equal(t, http.StatusNotFound, b.w.Code)
 		})
 	})
@@ -106,7 +106,7 @@ func TestGame_StartGame(t *testing.T) {
 			b.mockGameEngine.EXPECT().StartGame(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error")).Times(1)
 
 			c := b.controller()
-			c.WithBot(c.StartGame)(b.w, botRequest(http.MethodPost, testBot, "/start", defaultRequest))
+			c.WithGame(c.StartGame)(b.w, botRequest(http.MethodPost, testBot, "/start", defaultRequest))
 			assert.Equal(t, http.StatusInternalServerError, b.w.Code)
 		})
 	})
@@ -119,7 +119,7 @@ func TestGame_CalculateMove(t *testing.T) {
 				&model.SnakeAction{}, nil).Times(1)
 
 			c := b.controller()
-			c.WithBot(c.CalculateMove)(b.w, botRequest(http.MethodPost, testBot, "/move", defaultRequest))
+			c.WithGame(c.CalculateMove)(b.w, botRequest(http.MethodPost, testBot, "/move", defaultRequest))
 			assert.Equal(t, http.StatusOK, b.w.Code)
 		})
 	})
@@ -136,7 +136,7 @@ func TestGame_CalculateMove(t *testing.T) {
 				"other_bot": otherBot,
 			}, b.mockGameEngine)
 
-			c.WithBot(c.CalculateMove)(b.w, botRequest(http.MethodPost, "other_bot", "/move", defaultRequest))
+			c.WithGame(c.CalculateMove)(b.w, botRequest(http.MethodPost, "other_bot", "/move", defaultRequest))
 			assert.Equal(t, http.StatusOK, b.w.Code)
 		})
 	})
@@ -146,7 +146,7 @@ func TestGame_CalculateMove(t *testing.T) {
 			b.mockBot.EXPECT().CalculateMove(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 
 			c := b.controller()
-			c.WithBot(c.CalculateMove)(b.w, botRequest(http.MethodPost, "not_a_bot", "/move", defaultRequest))
+			c.WithGame(c.CalculateMove)(b.w, botRequest(http.MethodPost, "not_a_bot", "/move", defaultRequest))
 			assert.Equal(t, http.StatusNotFound, b.w.Code)
 		})
 	})
@@ -156,7 +156,7 @@ func TestGame_CalculateMove(t *testing.T) {
 			b.mockBot.EXPECT().CalculateMove(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 
 			c := b.controller()
-			c.WithBot(c.CalculateMove)(b.w, botRequest(http.MethodPost, testBot, "/move", "bad request"))
+			c.WithGame(c.CalculateMove)(b.w, botRequest(http.MethodPost, testBot, "/move", "bad request"))
 			assert.Equal(t, http.StatusBadRequest, b.w.Code)
 		})
 	})
@@ -167,7 +167,7 @@ func TestGame_CalculateMove(t *testing.T) {
 				nil, errors.New("error")).Times(1)
 
 			c := b.controller()
-			c.WithBot(c.CalculateMove)(b.w, botRequest(http.MethodPost, testBot, "/move", defaultRequest))
+			c.WithGame(c.CalculateMove)(b.w, botRequest(http.MethodPost, testBot, "/move", defaultRequest))
 			assert.Equal(t, http.StatusInternalServerError, b.w.Code)
 		})
 	})

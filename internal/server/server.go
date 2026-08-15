@@ -27,9 +27,9 @@ func NewRouter(controller controllers.GameController, bots map[string]services.B
 	mux.HandleFunc("GET /{bot}", controller.WithBot(controller.Info))
 	mux.HandleFunc("GET /{bot}/{$}", controller.WithBot(controller.Info))
 
-	mux.HandleFunc("POST /{bot}/start", controller.WithBot(controller.StartGame))
-	mux.HandleFunc("POST /{bot}/end", controller.WithBot(controller.EndGame))
-	mux.HandleFunc("POST /{bot}/move", controller.WithBot(controller.CalculateMove))
+	mux.HandleFunc("POST /{bot}/start", controller.WithGame(controller.StartGame))
+	mux.HandleFunc("POST /{bot}/end", controller.WithGame(controller.EndGame))
+	mux.HandleFunc("POST /{bot}/move", controller.WithGame(controller.CalculateMove))
 
 	knownBots := make(map[string]bool, len(bots))
 	for name := range bots {
@@ -90,6 +90,7 @@ func observe(next http.Handler, knownBots map[string]bool) http.Handler {
 			return
 		}
 		slog.InfoContext(ctx, "request",
+			"bot", bot,
 			"status", rec.status,
 			"duration", took,
 		)

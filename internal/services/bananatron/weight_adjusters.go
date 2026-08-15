@@ -3,7 +3,6 @@ package bananatron
 import (
 	"context"
 	"log/slog"
-	"sync"
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/util"
@@ -17,24 +16,32 @@ const (
 )
 
 type WeightAdjuster interface {
-	AdjustWeight(ctx context.Context, wg *sync.WaitGroup, options *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex)
+	AdjustWeight(ctx context.Context, selfSnake model.Snake, board model.Board) map[model.Direction]float64
+}
+
+func newDeltas() map[model.Direction]float64 {
+	deltas := make(map[model.Direction]float64, len(model.AllDirections))
+	for _, direction := range model.AllDirections {
+		deltas[direction] = 0
+	}
+	return deltas
 }
 
 // OccupiedSquaresAdjuster If a square is occupied, severely penalize that square
 type OccupiedSquaresAdjuster struct{}
 
-func (a *OccupiedSquaresAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
-	defer wg.Done()
+func (a *OccupiedSquaresAdjuster) AdjustWeight(ctx context.Context, selfSnake model.Snake, board model.Board) map[model.Direction]float64 {
+	deltas := newDeltas()
 
 	for _, direction := range model.AllDirections {
 		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
 		if !board.IsCoordClear(*targetSquare) {
 			// Coord is occupied, penalize option
-			mux.Lock()
-			(*weightedOptions)[direction] += OccupiedSquarePenalty
-			mux.Unlock()
+			deltas[direction] += OccupiedSquarePenalty
 		}
 	}
+
+	return deltas
 }
 
 // CollisionCourseAdjuster a collision course is when an enemy snake is heading straight and its next coord
@@ -42,8 +49,8 @@ func (a *OccupiedSquaresAdjuster) AdjustWeight(ctx context.Context, wg *sync.Wai
 // it is not guaranteed the enemy will continue straight.
 type CollisionCourseAdjuster struct{}
 
-func (a *CollisionCourseAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
-	defer wg.Done()
+func (a *CollisionCourseAdjuster) AdjustWeight(ctx context.Context, selfSnake model.Snake, board model.Board) map[model.Direction]float64 {
+	deltas := newDeltas()
 
 	var nextOccupiedCoords []model.Coord
 	for _, snake := range board.Snakes {
@@ -67,18 +74,18 @@ func (a *CollisionCourseAdjuster) AdjustWeight(ctx context.Context, wg *sync.Wai
 		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is a collision course coord, penalize option
-			mux.Lock()
-			(*weightedOptions)[direction] += CollisionCoursePenalty
-			mux.Unlock()
+			deltas[direction] += CollisionCoursePenalty
 		}
 	}
+
+	return deltas
 }
 
 // PotentialEnemyMoveAdjuster If an enemy snake could move onto a square, penalize that square
 type PotentialEnemyMoveAdjuster struct{}
 
-func (a *PotentialEnemyMoveAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
-	defer wg.Done()
+func (a *PotentialEnemyMoveAdjuster) AdjustWeight(ctx context.Context, selfSnake model.Snake, board model.Board) map[model.Direction]float64 {
+	deltas := newDeltas()
 
 	for _, direction := range model.AllDirections {
 		potentialMoveSquare := selfSnake.Head.GetCoordInDirection(direction)
@@ -91,20 +98,20 @@ func (a *PotentialEnemyMoveAdjuster) AdjustWeight(ctx context.Context, wg *sync.
 				potentialEnemyMoveSquare := enemySnake.Head.GetCoordInDirection(snakeDirection)
 				if potentialEnemyMoveSquare != nil && *potentialEnemyMoveSquare == *potentialMoveSquare {
 					// Coord is a potential enemy move coord, penalize option
-					mux.Lock()
-					(*weightedOptions)[direction] += EnemyPotentialMovePenalty
-					mux.Unlock()
+					deltas[direction] += EnemyPotentialMovePenalty
 				}
 			}
 		}
 	}
+
+	return deltas
 }
 
 // CavernSizeAdjuster uses flood fill to determine how many open squares are reachable from each direction
 type CavernSizeAdjuster struct{}
 
-func (a *CavernSizeAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
-	defer wg.Done()
+func (a *CavernSizeAdjuster) AdjustWeight(ctx context.Context, selfSnake model.Snake, board model.Board) map[model.Direction]float64 {
+	deltas := newDeltas()
 
 	for _, direction := range model.AllDirections {
 		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
@@ -124,17 +131,17 @@ func (a *CavernSizeAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGrou
 		}
 
 		cavernScore := float64(len(floodFillCoords)) / float64(len(snakesInCavern))
-		mux.Lock()
-		(*weightedOptions)[direction] += cavernScore
-		mux.Unlock()
+		deltas[direction] += cavernScore
 	}
+
+	return deltas
 }
 
 // AvoidingCorneredSnakesAdjuster When an enemy snake has only one valid move, avoid moving to that coord
 type AvoidingCorneredSnakesAdjuster struct{}
 
-func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(ctx context.Context, wg *sync.WaitGroup, weightedOptions *map[model.Direction]float64, selfSnake model.Snake, board model.Board, mux *sync.RWMutex) {
-	defer wg.Done()
+func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(ctx context.Context, selfSnake model.Snake, board model.Board) map[model.Direction]float64 {
+	deltas := newDeltas()
 
 	var nextOccupiedCoords []model.Coord // Tracks escape coords for cornered snakes
 	for _, snake := range board.Snakes {
@@ -158,9 +165,9 @@ func (a *AvoidingCorneredSnakesAdjuster) AdjustWeight(ctx context.Context, wg *s
 		targetSquare := selfSnake.Head.GetCoordInDirection(direction)
 		if util.Contains(nextOccupiedCoords, *targetSquare) {
 			// Coord is an escape coord for cornered snake, penalize option
-			mux.Lock()
-			(*weightedOptions)[direction] += CorneredSnakeEscapeSquarePenalty
-			mux.Unlock()
+			deltas[direction] += CorneredSnakeEscapeSquarePenalty
 		}
 	}
+
+	return deltas
 }

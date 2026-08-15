@@ -9,9 +9,7 @@ import (
 	"BattlesnakeReptarium/internal/model"
 )
 
-type Service struct {
-	mux sync.RWMutex
-}
+type Service struct{}
 
 func New() *Service {
 	return &Service{}
@@ -37,8 +35,6 @@ func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int
 		weightedOptions[direction] = float64(i) // Give default weight of i so that snake will prefer clockwise movement
 	}
 
-	wg := new(sync.WaitGroup)
-
 	adjusters := []WeightAdjuster{
 		&OccupiedSquaresAdjuster{},
 		&CollisionCourseAdjuster{},
@@ -47,11 +43,20 @@ func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int
 		&PotentialEnemyMoveAdjuster{},
 	}
 
-	wg.Add(len(adjusters))
-	for _, adjuster := range adjusters {
-		go adjuster.AdjustWeight(ctx, wg, &weightedOptions, selfSnake, board, &svc.mux)
+	results := make([]map[model.Direction]float64, len(adjusters))
+	var wg sync.WaitGroup
+	for i, adjuster := range adjusters {
+		wg.Go(func() {
+			results[i] = adjuster.AdjustWeight(ctx, selfSnake, board)
+		})
 	}
 	wg.Wait()
+
+	for _, deltas := range results {
+		for direction, weight := range deltas {
+			weightedOptions[direction] += weight
+		}
+	}
 
 	return determineSnakeAction(weightedOptions), nil
 }
