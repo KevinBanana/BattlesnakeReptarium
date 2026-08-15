@@ -3,6 +3,8 @@ package constrictor
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 	"time"
@@ -32,6 +34,18 @@ func TestMovesMatchDirections(t *testing.T) {
 	require.Equal(t, model.DOWN, Down.Direction())
 	require.Equal(t, model.LEFT, Left.Direction())
 	require.Equal(t, model.RIGHT, Right.Direction())
+}
+
+func TestString(t *testing.T) {
+	s := New(4, 3, []uint8{0, 11}) // seat A bottom-left, seat B top-right
+	s.Apply([MaxSnakes]Move{Up, Left})
+
+	// Row 0 prints last. Both snakes still own their start cell (digit) and have
+	// moved their head one step (letter): A up the left edge, B left along the top.
+	require.Equal(t, "turn 1, alive A B\n"+
+		"..B1\n"+
+		"A...\n"+
+		"0...\n", s.String())
 }
 
 // TestDifferentialAgainstOfficialRules plays
@@ -142,6 +156,25 @@ func TestPlacementScores(t *testing.T) {
 	require.InDeltaSlice(t, []float64{1, -1}, got[:2], 1e-9)
 }
 
+// TestWriteGameHTML plays one random game and writes it out to look at. It
+// asserts nothing beyond "the renderer runs"; the point is the logged path:
+//
+//	go test ./internal/sim/constrictor -run WriteGameHTML -v
+func TestWriteGameHTML(t *testing.T) {
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	s := New(boardSize, boardSize, Starts(boardSize, boardSize, numSnakes, rnd))
+
+	frames := []State{*s}
+	for !s.Over() {
+		s.Apply(pickMoves(s, rnd))
+		frames = append(frames, *s)
+	}
+
+	path := filepath.Join(os.TempDir(), "constrictor-game.html")
+	require.NoError(t, os.WriteFile(path, []byte(HTML(frames)), 0o600))
+	t.Logf("%d turns written to %s", len(frames)-1, path)
+}
+
 func BenchmarkApply(b *testing.B) {
 	rnd := rand.New(rand.NewSource(3))
 	s := New(boardSize, boardSize, Starts(boardSize, boardSize, numSnakes, rnd))
@@ -219,30 +252,53 @@ func pickMoves(s *State, rnd *rand.Rand) [MaxSnakes]Move {
 	return moves
 }
 
+// officialState re-expresses a rules.BoardState as a State, so the two can be
+// compared and printed as the same kind of thing.
+func officialState(bs *rules.BoardState) *State {
+	s := &State{W: bs.Width, H: bs.Height, N: len(bs.Snakes), Turn: bs.Turn}
+	for i := range s.Cells {
+		s.Cells[i] = Empty
+	}
+	for i := range s.Died {
+		s.Died[i] = -1
+	}
+	for i, snake := range bs.Snakes {
+		if snake.EliminatedCause != rules.NotEliminated {
+			s.Died[i] = int16(snake.EliminatedOnTurn)
+			continue
+		}
+		s.Alive |= 1 << i
+		s.Heads[i] = uint8(snake.Body[0].Y*bs.Width + snake.Body[0].X)
+		for _, p := range snake.Body {
+			s.Cells[p.Y*bs.Width+p.X] = uint8(i)
+		}
+	}
+	return s
+}
+
 func requireSameBoard(t *testing.T, bs *rules.BoardState, s *State, game, turn int) {
 	t.Helper()
 
-	var cells [MaxCells]uint8
-	for i := range cells {
-		cells[i] = Empty
-	}
-	for i, snake := range bs.Snakes {
-		alive := snake.EliminatedCause == rules.NotEliminated
-		require.Equal(t, alive, s.IsAlive(i),
-			"game %d turn %d: snake %d alive mismatch (official cause %q)", game, turn, i, snake.EliminatedCause)
-		if !alive {
+	// want and s are only formatted when an assertion fails, so rendering both
+	// boards on every turn of every game costs nothing.
+	want := officialState(bs)
+	const msg = "game %d turn %d: %s\nofficial:\n%sfast:\n%s"
+
+	require.Equal(t, want.Alive, s.Alive, msg, game, turn, "alive set mismatch", want, s)
+	require.Equal(t, want.Cells, s.Cells, msg, game, turn, "occupancy mismatch", want, s)
+	require.Equal(t, want.Died, s.Died, msg, game, turn, "elimination turn mismatch", want, s)
+	require.Equal(t, want.Turn, s.Turn, msg, game, turn, "turn counter mismatch", want, s)
+
+	for i := 0; i < s.N; i++ {
+		if !s.IsAlive(i) {
 			continue
 		}
-		require.Equal(t, uint8(snake.Body[0].Y*s.W+snake.Body[0].X), s.Heads[i],
-			"game %d turn %d: snake %d head mismatch", game, turn, i)
+		require.Equal(t, want.Heads[i], s.Heads[i], msg, game, turn, "head mismatch", want, s)
 		// Constrictor grows every snake every turn except the first (the start
 		// body is three copies of one point, so the first move only unstacks it).
-		require.Equal(t, max(3, bs.Turn+2), len(snake.Body),
-			"game %d turn %d: snake %d has a length no other snake can have", game, turn, i)
-		for _, p := range snake.Body {
-			cells[p.Y*s.W+p.X] = uint8(i)
-		}
+		// Occupancy alone would not catch a length bug, because the duplicated
+		// tail segments sit on cells the snake already owns.
+		require.Equal(t, max(3, bs.Turn+2), len(bs.Snakes[i].Body),
+			msg, game, turn, "length no other snake can have", want, s)
 	}
-	require.Equal(t, cells, s.Cells, "game %d turn %d: occupancy mismatch", game, turn)
-	require.Equal(t, bs.Turn, s.Turn, "game %d: turn counter mismatch", game)
 }

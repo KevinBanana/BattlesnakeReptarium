@@ -14,8 +14,10 @@
 package constrictor
 
 import (
+	"fmt"
 	"math/bits"
 	"math/rand"
+	"strings"
 
 	"BattlesnakeReptarium/internal/model"
 )
@@ -186,6 +188,44 @@ func (s *State) Apply(moves [MaxSnakes]Move) {
 	}
 	s.Alive &^= dead
 	s.Turn++
+}
+
+func (s *State) String() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "turn %d, alive", s.Turn)
+	for i := 0; i < s.N; i++ {
+		if s.IsAlive(i) {
+			fmt.Fprintf(&b, " %c", 'A'+i)
+		}
+	}
+	b.WriteByte('\n')
+
+	for _, row := range s.rows() {
+		b.WriteString(row)
+		b.WriteByte('\n')
+	}
+	return b.String()
+}
+
+// rows renders the board a row at a time
+func (s *State) rows() []string {
+	out := make([]string, 0, s.H)
+	for y := s.H - 1; y >= 0; y-- {
+		var row strings.Builder
+		for x := 0; x < s.W; x++ {
+			c := uint8(y*s.W + x)
+			switch owner := s.Cells[c]; {
+			case owner == Empty:
+				row.WriteByte('.')
+			case s.IsAlive(int(owner)) && s.Heads[owner] == c:
+				row.WriteByte('A' + owner)
+			default:
+				row.WriteByte('0' + owner)
+			}
+		}
+		out = append(out, row.String())
+	}
+	return out
 }
 
 // Placement scores each seat by finishing position: 1st = +1, last = -1, evenly
