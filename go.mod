@@ -5,6 +5,7 @@ go 1.26.0
 toolchain go1.26.5
 
 require (
+	github.com/BattlesnakeOfficial/rules v1.2.3
 	github.com/prometheus/client_golang v1.24.1
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.11.1

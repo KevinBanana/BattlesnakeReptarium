@@ -3,3 +3,4 @@ config/local.yml
 DEPLOY.md
 /.github/actions-runner
 TODO.md
+/notes

@@ -1,5 +1,14 @@
 package model
 
+// Gamemodes, as they appear in Ruleset.Name. A bot declares which of these it
+// is built for via services.Bot.Gamemodes.
+const (
+	GamemodeStandard    = "standard"
+	GamemodeConstrictor = "constrictor"
+	GamemodeRoyale      = "royale"
+	GamemodeDuel        = "duel"
+)
+
 type Ruleset struct {
 	Name     string   `json:"name"`
 	Version  string   `json:"version"`

@@ -46,7 +46,7 @@ func (g GameController) WithBot(h botHandler) http.HandlerFunc {
 	}
 }
 
-func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, _ services.Bot) {
+func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, bot services.Bot) {
 	var reqBody model.RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		slog.WarnContext(r.Context(), "invalid request body", "err", err)
@@ -55,6 +55,11 @@ func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, _ serv
 	}
 
 	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
+
+	if !services.PlaysGamemode(bot, reqBody.Game.Ruleset.Name) {
+		slog.WarnContext(ctx, "bot entered a gamemode it is not built for",
+			"ruleset", reqBody.Game.Ruleset.Name, "supports", bot.Gamemodes())
+	}
 
 	if err := g.gameEngineSvc.StartGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
 		slog.ErrorContext(ctx, "failed to start game", "err", err)

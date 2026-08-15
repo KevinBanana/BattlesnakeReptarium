@@ -20,6 +20,10 @@ func (svc *Service) Customizations() model.SnakeCustomizations {
 	}
 }
 
+func (svc *Service) Gamemodes() []string {
+	return nil
+}
+
 func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	// TODO: Implement, for now return a random move
 	return &model.SnakeAction{
