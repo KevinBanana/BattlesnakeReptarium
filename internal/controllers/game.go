@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"maps"
@@ -27,6 +28,7 @@ func NewGameController(bots map[string]services.Bot, gameEngineSvc services.Game
 }
 
 type botHandler func(w http.ResponseWriter, r *http.Request, bot services.Bot)
+type gameHandler func(ctx context.Context, w http.ResponseWriter, body model.RequestBody, name string, bot services.Bot)
 
 // WithBot resolves the {bot} path segment before handing off, 404ing if the
 // name is unknown.
@@ -41,85 +43,72 @@ func (g GameController) WithBot(h botHandler) http.HandlerFunc {
 			return
 		}
 
-		ctx := slogctx.Prepend(r.Context(), "bot", name)
-		h(w, r.WithContext(ctx), bot)
+		h(w, r, bot)
 	}
 }
 
-func (g GameController) StartGame(w http.ResponseWriter, r *http.Request, bot services.Bot) {
-	var reqBody model.RequestBody
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		slog.WarnContext(r.Context(), "invalid request body", "err", err)
-		writeStatus(w, http.StatusBadRequest)
-		return
-	}
+func (g GameController) WithGame(h gameHandler) http.HandlerFunc {
+	return g.WithBot(func(w http.ResponseWriter, r *http.Request, bot services.Bot) {
+		name := r.PathValue("bot")
 
-	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
+		var body model.RequestBody
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			slog.WarnContext(r.Context(), "invalid request body", "bot", name, "err", err)
+			writeStatus(w, http.StatusBadRequest)
+			return
+		}
 
-	if !services.PlaysGamemode(bot, reqBody.Game.Ruleset.Name) {
+		ctx := slogctx.Prepend(r.Context(), "bot", name, "game", body.Game.ID, "turn", body.Turn)
+		h(ctx, w, body, name, bot)
+	})
+}
+
+func (g GameController) StartGame(ctx context.Context, w http.ResponseWriter, body model.RequestBody, _ string, bot services.Bot) {
+	if !services.PlaysGamemode(bot, body.Game.Ruleset.Name) {
 		slog.WarnContext(ctx, "bot entered a gamemode it is not built for",
-			"ruleset", reqBody.Game.Ruleset.Name, "supports", bot.Gamemodes())
+			"ruleset", body.Game.Ruleset.Name, "supports", bot.Gamemodes())
 	}
 
-	if err := g.gameEngineSvc.StartGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake); err != nil {
+	if err := g.gameEngineSvc.StartGame(ctx, body.Game, body.Board, body.SelfSnake); err != nil {
 		slog.ErrorContext(ctx, "failed to start game", "err", err)
 		writeStatus(w, http.StatusInternalServerError)
 		return
 	}
 
-	slog.InfoContext(ctx, "game started", "ruleset", reqBody.Game.Ruleset.Name, "map", reqBody.Game.Map)
+	slog.InfoContext(ctx, "game started", "ruleset", body.Game.Ruleset.Name, "map", body.Game.Map)
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (g GameController) EndGame(w http.ResponseWriter, r *http.Request, _ services.Bot) {
-	var reqBody model.RequestBody
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		slog.WarnContext(r.Context(), "invalid request body", "err", err)
-		writeStatus(w, http.StatusBadRequest)
-		return
-	}
-
-	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID)
-
-	finished, err := g.gameEngineSvc.EndGame(ctx, reqBody.Game, reqBody.Board, reqBody.SelfSnake)
+func (g GameController) EndGame(ctx context.Context, w http.ResponseWriter, body model.RequestBody, name string, _ services.Bot) {
+	finished, err := g.gameEngineSvc.EndGame(ctx, body.Game, body.Board, body.SelfSnake)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to end game", "err", err)
 		writeStatus(w, http.StatusInternalServerError)
 		return
 	}
 
-	metrics.ObserveGameFinished(r.PathValue("bot"), finished.IsWin)
+	metrics.ObserveGameFinished(name, finished.IsWin)
 
 	slog.InfoContext(ctx, "game ended",
 		"win", finished.IsWin,
-		"turns", reqBody.Turn,
-		"length", reqBody.SelfSnake.Length,
-		"health", reqBody.SelfSnake.Health,
+		"length", body.SelfSnake.Length,
+		"health", body.SelfSnake.Health,
 	)
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (g GameController) CalculateMove(w http.ResponseWriter, r *http.Request, bot services.Bot) {
-	var reqBody model.RequestBody
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		slog.WarnContext(r.Context(), "invalid request body", "err", err)
-		writeStatus(w, http.StatusBadRequest)
-		return
-	}
-
-	ctx := slogctx.Prepend(r.Context(), "game", reqBody.Game.ID, "turn", reqBody.Turn)
-
+func (g GameController) CalculateMove(ctx context.Context, w http.ResponseWriter, body model.RequestBody, _ string, bot services.Bot) {
 	slog.InfoContext(ctx, "move request received",
-		"health", reqBody.SelfSnake.Health,
-		"length", reqBody.SelfSnake.Length,
-		"head", reqBody.SelfSnake.Head,
-		"snakes", len(reqBody.Board.Snakes),
+		"health", body.SelfSnake.Health,
+		"length", body.SelfSnake.Length,
+		"head", body.SelfSnake.Head,
+		"snakes", len(body.Board.Snakes),
 	)
-	slog.DebugContext(ctx, "board state", "board", reqBody.Board)
+	slog.DebugContext(ctx, "board state", "board", body.Board)
 
-	snakeAction, err := bot.CalculateMove(ctx, reqBody.Game, reqBody.Turn, reqBody.Board, reqBody.SelfSnake)
+	snakeAction, err := bot.CalculateMove(ctx, body.Game, body.Turn, body.Board, body.SelfSnake)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to calculate move", "err", err)
 		writeStatus(w, http.StatusInternalServerError)

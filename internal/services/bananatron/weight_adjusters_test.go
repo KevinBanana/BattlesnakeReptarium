@@ -2,7 +2,6 @@ package bananatron
 
 import (
 	"reflect"
-	"sync"
 	"testing"
 
 	"BattlesnakeReptarium/internal/mock"
@@ -53,12 +52,8 @@ func TestOccupiedSquaresAdjuster(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			wg := new(sync.WaitGroup)
-			wg.Add(1)
-
 			adjuster := &OccupiedSquaresAdjuster{}
-			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			options := adjuster.AdjustWeight(t.Context(), tc.selfSnake, tc.board)
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -89,12 +84,8 @@ func TestCollisionCourseAdjuster(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			wg := new(sync.WaitGroup)
-			wg.Add(1)
-
 			adjuster := &CollisionCourseAdjuster{}
-			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			options := adjuster.AdjustWeight(t.Context(), tc.selfSnake, tc.board)
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -136,12 +127,8 @@ func TestCavernSizeAdjuster(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			wg := new(sync.WaitGroup)
-			wg.Add(1)
-
 			adjuster := &CavernSizeAdjuster{}
-			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			options := adjuster.AdjustWeight(t.Context(), tc.selfSnake, tc.board)
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -167,12 +154,8 @@ func TestAvoidingCorneredSnakesAdjuster(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			wg := new(sync.WaitGroup)
-			wg.Add(1)
-
 			adjuster := &AvoidingCorneredSnakesAdjuster{}
-			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			options := adjuster.AdjustWeight(t.Context(), tc.selfSnake, tc.board)
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
@@ -214,12 +197,8 @@ func TestPotentialEnemyMoveAdjuster(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			wg := new(sync.WaitGroup)
-			wg.Add(1)
-
 			adjuster := &PotentialEnemyMoveAdjuster{}
-			options := map[model.Direction]float64{model.UP: 0, model.LEFT: 0, model.DOWN: 0, model.RIGHT: 0}
-			adjuster.AdjustWeight(t.Context(), wg, &options, tc.selfSnake, tc.board, &sync.RWMutex{})
+			options := adjuster.AdjustWeight(t.Context(), tc.selfSnake, tc.board)
 			if !reflect.DeepEqual(options, tc.want) {
 				t.Errorf("Expected %v but got %v", tc.want, options)
 			}
