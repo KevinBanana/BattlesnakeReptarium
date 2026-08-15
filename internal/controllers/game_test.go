@@ -10,6 +10,7 @@ import (
 
 	"BattlesnakeReptarium/internal/model"
 	"BattlesnakeReptarium/internal/services"
+
 	"go.uber.org/mock/gomock"
 
 	"github.com/stretchr/testify/assert"
@@ -183,9 +184,12 @@ func botRequest(method, bot, action string, body any) *http.Request {
 func withGameSetup(t gomock.TestReporter, testFunc func(testBundle gameTestBundle)) {
 	mockCtrl := gomock.NewController(t)
 
+	mockBot := services.NewMockBot(mockCtrl)
+	mockBot.EXPECT().Gamemodes().Return(nil).AnyTimes()
+
 	testFunc(gameTestBundle{
 		w:              httptest.NewRecorder(),
-		mockBot:        services.NewMockBot(mockCtrl),
+		mockBot:        mockBot,
 		mockGameEngine: services.NewMockGameEngineService(mockCtrl),
 	})
 }

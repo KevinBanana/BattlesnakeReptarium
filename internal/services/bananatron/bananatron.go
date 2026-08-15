@@ -25,6 +25,12 @@ func (svc *Service) Customizations() model.SnakeCustomizations {
 	}
 }
 
+func (svc *Service) Gamemodes() []string {
+	// collision and cornered-snake weighting assumes no
+	// food and no starvation, so it only plays constrictor
+	return []string{model.GamemodeConstrictor}
+}
+
 func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int, board model.Board, selfSnake model.Snake) (*model.SnakeAction, error) {
 	weightedOptions := map[model.Direction]float64{}
 	for i, direction := range model.AllDirections {

@@ -50,6 +50,7 @@ func (mr *MockBotMockRecorder) CalculateMove(ctx, game, turn, board, self interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalculateMove", reflect.TypeOf((*MockBot)(nil).CalculateMove), ctx, game, turn, board, self)
 }
 
+// Customizations mocks base method.
 func (m *MockBot) Customizations() model.SnakeCustomizations {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Customizations")
@@ -57,7 +58,22 @@ func (m *MockBot) Customizations() model.SnakeCustomizations {
 	return ret0
 }
 
+// Customizations indicates an expected call of Customizations.
 func (mr *MockBotMockRecorder) Customizations() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Customizations", reflect.TypeOf((*MockBot)(nil).Customizations))
+}
+
+// Gamemodes mocks base method.
+func (m *MockBot) Gamemodes() []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Gamemodes")
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// Gamemodes indicates an expected call of Gamemodes.
+func (mr *MockBotMockRecorder) Gamemodes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Gamemodes", reflect.TypeOf((*MockBot)(nil).Gamemodes))
 }
