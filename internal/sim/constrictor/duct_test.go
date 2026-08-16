@@ -25,8 +25,9 @@ func TestSearchBeatsVoronoi(t *testing.T) {
 	}
 
 	rnd := rand.New(rand.NewSource(11))
+	search := Search{Sims: searchSims, Eval: RolloutEvaluator{Rnd: rnd}, Rnd: rnd}
 	avg := match(rnd, games(), func(s *State, seat int) Move {
-		return Search(s, searchSims, rnd)[seat]
+		return search.Run(s).Best(seat)
 	})
 
 	t.Logf("DUCT %d sims vs 3x Voronoi: average placement %+.3f", searchSims, avg)

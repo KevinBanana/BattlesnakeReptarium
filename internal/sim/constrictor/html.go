@@ -7,7 +7,7 @@ import (
 
 // HTML renders a whole game as one self-contained page: a grid of colored
 // squares with a slider to scrub through turns, arrow keys to step.
-func HTML(frames []State) string {
+func HTML(frames []State, ego int) string {
 	if len(frames) == 0 {
 		return ""
 	}
@@ -15,7 +15,7 @@ func HTML(frames []State) string {
 	for i, f := range frames {
 		quoted[i] = `"` + strings.Join(f.rows(), "") + `"`
 	}
-	return fmt.Sprintf(page, frames[0].W, frames[0].H, strings.Join(quoted, ","))
+	return fmt.Sprintf(page, frames[0].W, frames[0].H, ego, strings.Join(quoted, ","))
 }
 
 const page = `<!doctype html>
@@ -26,7 +26,8 @@ body{background:#14161a;color:#c8ccd4;font:14px ui-monospace,SFMono-Regular,Menl
      display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px}
 #grid{display:grid;gap:2px}
 .c{width:28px;height:28px;border-radius:3px;background:#22252b}
-.s0{background:#4ea8de}.s1{background:#f4a261}.s2{background:#8ecf6b}.s3{background:#d96a8f}
+.ego{background:#4ea8de}
+.foe0{background:#f6bd60}.foe1{background:#f4a261}.foe2{background:#e76f51}.foe3{background:#c1443b}
 .head{outline:3px solid #f5f7fa;outline-offset:-3px}
 #bar{display:flex;align-items:center;gap:10px}
 button{background:#22252b;color:inherit;border:1px solid #343842;border-radius:4px;
@@ -41,7 +42,8 @@ input[type=range]{width:340px}
   <button id="next">&rarr;</button>
 </div>
 <script>
-const W = %d, H = %d, F = [%s];
+const W = %d, H = %d, EGO = %d, F = [%s];
+const seatClass = seat => seat === EGO ? "ego" : "foe" + seat;
 const grid = document.getElementById("grid");
 grid.style.gridTemplateColumns = "repeat(" + W + ",28px)";
 
@@ -63,9 +65,9 @@ function draw() {
     if (ch === ".") {
       cells[i].className = "c";
     } else if (ch >= "A" && ch <= "Z") {
-      cells[i].className = "c s" + (ch.charCodeAt(0) - 65) + " head";
+      cells[i].className = "c " + seatClass(ch.charCodeAt(0) - 65) + " head";
     } else {
-      cells[i].className = "c s" + (ch.charCodeAt(0) - 48);
+      cells[i].className = "c " + seatClass(ch.charCodeAt(0) - 48);
     }
   }
   info.textContent = "turn " + slider.value + " of " + (F.length - 1);

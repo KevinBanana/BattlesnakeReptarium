@@ -1,0 +1,17 @@
+# Install into a venv, never a conda base env - onnx/onnxruntime drag numpy
+# forward and break whatever else lives there:
+#
+#   python -m venv --system-site-packages .venv
+#   .venv\Scripts\python -m pip install -r training/requirements.txt
+#
+# torch is the CUDA build, installed separately because it needs its own index:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+
+torch>=2.4
+onnx>=1.16      # torch.onnx.export needs it, despite living outside torch
+numpy>=1.26
+
+# Pinned: 1.28 fails DLL init on this machine ("onnxruntime_pybind11_state")
+# with VC runtime 14.44 present, and 1.18.1 works. Match the native library
+# version the Go binding loads.
+onnxruntime==1.18.1

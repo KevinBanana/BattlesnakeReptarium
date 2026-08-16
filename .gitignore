@@ -4,3 +4,8 @@ DEPLOY.md
 /.github/actions-runner
 TODO.md
 /notes
+__pycache__/
+/.venv/
+/runs/
+/training/testdata/
+/third_party

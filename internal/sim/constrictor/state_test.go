@@ -168,7 +168,7 @@ func TestWriteGameHTML(t *testing.T) {
 	}
 
 	path := filepath.Join(os.TempDir(), "constrictor-game.html")
-	require.NoError(t, os.WriteFile(path, []byte(HTML(frames)), 0o600))
+	require.NoError(t, os.WriteFile(path, []byte(HTML(frames, 0)), 0o600))
 	t.Logf("%d turns written to %s", len(frames)-1, path)
 }
 
