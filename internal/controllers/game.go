@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"strconv"
 
 	slogctx "github.com/veqryn/slog-context"
 
@@ -105,6 +106,11 @@ func (g GameController) CalculateMove(ctx context.Context, w http.ResponseWriter
 		"length", body.SelfSnake.Length,
 		"head", body.SelfSnake.Head,
 		"snakes", len(body.Board.Snakes),
+		// What the battlesnake server measured for our previous move, in milliseconds. The
+		// gap between this and the duration we log for that request is
+		// everything outside this process including the round trip
+		"engine_latency_ms", latencyMillis(body.SelfSnake.Latency),
+		"timeout_ms", body.Game.Timeout,
 	)
 	slog.DebugContext(ctx, "board state", "board", body.Board)
 
@@ -121,6 +127,17 @@ func (g GameController) CalculateMove(ctx context.Context, w http.ResponseWriter
 		"move":  snakeAction.Move,
 		"shout": snakeAction.Shout,
 	})
+}
+
+// latencyMillis parses the engine's latency field, which arrives as a string of
+// milliseconds and is empty on the first move of a game. Logged as a number so
+// it can be compared and aggregated rather than only matched.
+func latencyMillis(latency string) int {
+	ms, err := strconv.Atoi(latency)
+	if err != nil {
+		return 0
+	}
+	return ms
 }
 
 // Info returns metadata for a specific snake bot. apiversion and author are
