@@ -1,10 +1,14 @@
-services:
+﻿services:
   battlesnake:
     build: .
     restart: unless-stopped
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-prod}
       PORT: 8080
+    volumes:
+      # Weights are mounted, not baked in, so promoting a newly trained network
+      # is a file copy and a restart. Which ones get served is config/<env>.yml.
+      - ./runs:/app/runs:ro
     ports:
       # Dedicated high host port, bound to loopback only. Tailscale Funnel
       # (on the host) forwards HTTPS -> 127.0.0.1:47654
