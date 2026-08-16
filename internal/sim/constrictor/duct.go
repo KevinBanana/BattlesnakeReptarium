@@ -9,6 +9,7 @@ package constrictor
 import (
 	"math"
 	"math/rand"
+	"time"
 )
 
 // cPUCT weights exploration against the prior. Values are placements in
