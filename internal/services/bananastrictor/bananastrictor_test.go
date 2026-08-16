@@ -85,7 +85,7 @@ func TestCalculateMove(t *testing.T) {
 		t.Skipf("no model at %s: run training/parity.py", testModel)
 	}
 
-	svc, err := open(testModel, 16, testBoard)
+	svc, err := open(testModel, 16, Budget, testBoard)
 	require.NoError(t, err)
 	defer svc.Close()
 
@@ -108,7 +108,7 @@ func TestCalculateMove(t *testing.T) {
 // it wanted. The alternative - a nil Service in the bots map - would panic on
 // the first request instead.
 func TestWithoutWeights(t *testing.T) {
-	_, err := open("does-not-exist.onnx", Sims, Board)
+	_, err := open("does-not-exist.onnx", Sims, Budget, Board)
 	require.ErrorContains(t, err, "does-not-exist.onnx")
 
 	var svc Service // what New returns when the weights will not load
