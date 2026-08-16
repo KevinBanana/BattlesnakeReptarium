@@ -21,6 +21,7 @@ RUN ldconfig
 WORKDIR /app
 COPY --from=build /battlesnake-app /battlesnake-app
 COPY config/ ./config/
+COPY weights/ ./weights/
 
 ENV ONNXRUNTIME_LIB=/usr/local/lib/libonnxruntime.so
 

@@ -18,7 +18,7 @@ import (
 
 const (
 	Name  = "bananastrictor"
-	Model = "runs/serving/bananastrictor.onnx"
+	Model = "weights/bananastrictor.onnx"
 
 	// Sims is the search budget per move. Every simulation evaluates all living
 	// seats as one batch, about 5ms for four on CPU, so this is most of the
