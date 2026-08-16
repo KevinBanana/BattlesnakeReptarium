@@ -15,6 +15,7 @@ import (
 	"BattlesnakeReptarium/internal/repo"
 	"BattlesnakeReptarium/internal/services"
 	"BattlesnakeReptarium/internal/services/bananabot"
+	"BattlesnakeReptarium/internal/services/bananastrictor"
 	"BattlesnakeReptarium/internal/services/bananatron"
 )
 
@@ -68,10 +69,13 @@ func Init(conf *config.Config) {
 
 // newBots returns every bot, keyed by the path segment it is served under.
 func newBots() map[string]services.Bot {
-	return map[string]services.Bot{
-		"bananabot":  bananabot.New(),
-		"bananatron": bananatron.New(),
+	bots := map[string]services.Bot{
+		"bananabot":      bananabot.New(),
+		"bananatron":     bananatron.New(),
+		"bananastrictor": bananastrictor.New(),
 	}
+
+	return bots
 }
 
 func observe(next http.Handler, knownBots map[string]bool) http.Handler {

@@ -22,9 +22,6 @@ const (
 	shortGames = 200
 )
 
-// TestMovesMatchDirections pins Move to its only reason for existing: an index
-// into model.AllDirections. If the two lists drift apart the fast model plays a
-// different game than the bot reports, and nothing else would catch it.
 func TestMovesMatchDirections(t *testing.T) {
 	require.Len(t, model.AllDirections, len(AllMoves))
 	for i, m := range AllMoves {
@@ -171,7 +168,7 @@ func TestWriteGameHTML(t *testing.T) {
 	}
 
 	path := filepath.Join(os.TempDir(), "constrictor-game.html")
-	require.NoError(t, os.WriteFile(path, []byte(HTML(frames)), 0o600))
+	require.NoError(t, os.WriteFile(path, []byte(HTML(frames, 0)), 0o600))
 	t.Logf("%d turns written to %s", len(frames)-1, path)
 }
 
@@ -237,15 +234,7 @@ func pickMoves(s *State, rnd *rand.Rand) [MaxSnakes]Move {
 		if rnd.Intn(5) == 0 {
 			continue
 		}
-		var free [4]Move
-		n := 0
-		for _, m := range AllMoves {
-			if c, ok := s.step(s.Heads[i], m); ok && s.Cells[c] == Empty {
-				free[n] = m
-				n++
-			}
-		}
-		if n > 0 {
+		if free, n := safeMoves(s, i); n > 0 {
 			moves[i] = free[rnd.Intn(n)]
 		}
 	}

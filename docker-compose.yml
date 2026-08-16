@@ -1,4 +1,4 @@
-services:
+﻿services:
   battlesnake:
     build: .
     restart: unless-stopped
