@@ -49,6 +49,9 @@ type Search struct {
 	Eval Evaluator
 	Rnd  *rand.Rand
 
+	// Deadline stops early and returns what the tree has
+	Deadline time.Time
+
 	// DirichletNoise mixes exploration noise into the root prior, as a weight
 	// in [0, 1]. Self-play wants it so the tree does not keep replaying its own
 	// opening; evaluation wants it off, to measure the policy as it is.
@@ -71,7 +74,15 @@ func (cfg Search) Run(s *State) Result {
 		cfg.addNoise(s, root)
 	}
 
+	checkDeadline := !cfg.Deadline.IsZero()
 	for i := 0; i < cfg.Sims; i++ {
+		// Never on the first pass: a search that returns zero visits has no move
+		// to offer, and an already-expired deadline is exactly when we most need
+		// it to answer with something.
+		if checkDeadline && i > 0 && time.Now().After(cfg.Deadline) {
+			break
+		}
+
 		st := *s // no undo: State is 168 bytes of no pointers, copying beats unwinding
 		cfg.simulate(root, &st)
 	}

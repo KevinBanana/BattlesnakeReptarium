@@ -20,10 +20,11 @@ const (
 	Name  = "bananastrictor"
 	Model = "weights/bananastrictor.onnx"
 
-	// Sims is the search budget per move. Every simulation evaluates all living
-	// seats as one batch, about 5ms for four on CPU, so this is most of the
-	// move latency and the ladder's limit is what sets it.
-	Sims = 64
+	// Budget is how long a move may take, and the real limit on search. The
+	// ladder allows ~500ms including the network round trip and the engine's own
+	// overhead, so this leaves room for both.
+	Budget = 300 * time.Millisecond
+	Sims   = 2000
 
 	// Board is the size the network was trained on
 	Board = 11
@@ -32,6 +33,7 @@ const (
 type Service struct {
 	session     *nn.Session
 	sims, board int
+	budget      time.Duration
 
 	// Evaluators hold a scratch buffer and are not safe for concurrent use, so
 	// each move borrows one. The ORT session underneath is shared and is safe.
@@ -39,25 +41,25 @@ type Service struct {
 }
 
 func New() *Service {
-	svc, err := open(Model, Sims, Board)
+	svc, err := open(Model, Sims, Budget, Board)
 	if err != nil {
 		slog.Error("bananastrictor has no weights and will refuse moves", "model", Model, "err", err)
 		return &Service{}
 	}
 
-	slog.Info("bananastrictor loaded", "model", Model, "sims", Sims, "board", Board)
+	slog.Info("bananastrictor loaded", "model", Model, "sims", Sims, "budget", Budget, "board", Board)
 	return svc
 }
 
 // open is New with the parameters visible, so tests can point at a model of
 // their own without a file at the deployment path.
-func open(path string, sims, board int) (*Service, error) {
+func open(path string, sims int, budget time.Duration, board int) (*Service, error) {
 	session, err := nn.Open(path, constrictor.Planes, board, board)
 	if err != nil {
 		return nil, fmt.Errorf("loading %s: %w", path, err)
 	}
 
-	svc := &Service{session: session, sims: sims, board: board}
+	svc := &Service{session: session, sims: sims, budget: budget, board: board}
 	svc.evaluators.New = func() any { return nn.NewEvaluator(session, board, board) }
 	return svc, nil
 }
@@ -88,13 +90,25 @@ func (svc *Service) CalculateMove(ctx context.Context, game model.Game, turn int
 	defer svc.evaluators.Put(evaluator)
 
 	search := constrictor.Search{
-		Sims: svc.sims,
-		Eval: evaluator,
-		Rnd:  rand.New(rand.NewSource(time.Now().UnixNano())),
+		Sims:     svc.sims,
+		Deadline: deadline(ctx, svc.budget),
+		Eval:     evaluator,
+		Rnd:      rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	move := search.Run(state).Best(seat)
 
 	return &model.SnakeAction{Move: move.Direction()}, nil
+}
+
+// deadline returns when search must stop: our own budget, or the caller's if
+// it is sooner. A request that has already been waiting has less time left than
+// we would otherwise assume.
+func deadline(ctx context.Context, budget time.Duration) time.Time {
+	ours := time.Now().Add(budget)
+	if theirs, ok := ctx.Deadline(); ok && theirs.Before(ours) {
+		return theirs
+	}
+	return ours
 }
 
 func (svc *Service) Close() error {
