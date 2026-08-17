@@ -23,7 +23,7 @@ const (
 	// Budget is how long a move may take, and the real limit on search. The
 	// ladder allows ~500ms including the network round trip and the engine's own
 	// overhead, so this leaves room for both.
-	Budget = 270 * time.Millisecond
+	Budget = 300 * time.Millisecond
 	Sims   = 2000
 
 	// Board is the size the network was trained on

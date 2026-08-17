@@ -11,12 +11,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Buckets are tuned to the Battlesnake move deadline (500ms). The client
-// default tops out at 10s, which would put every real move in one bucket.
+// Buckets are tuned to the Battlesnake move deadline (500ms), and dense between
+// 200ms and 500ms because that is where a searching bot actually lives.
 var requestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name:    "battlesnake_request_duration_seconds",
-	Help:    "HTTP request latency in seconds, by route.",
-	Buckets: []float64{.001, .0025, .005, .01, .025, .05, .1, .2, .3, .4, .5, 1},
+	Name: "battlesnake_request_duration_seconds",
+	Help: "HTTP request latency in seconds, by route.",
+	Buckets: []float64{
+		.005, .01, .025, .05, .1, .15, // the cheap endpoints: info, start, end
+		.2, .22, .24, .26, .28, .3, .32, .34, .36, .38, .4, // where moves live
+		.45, .5, .75, 1,
+	},
 }, []string{"route", "bot", "method", "status"})
 
 var gamesFinished = promauto.NewCounterVec(prometheus.CounterOpts{
