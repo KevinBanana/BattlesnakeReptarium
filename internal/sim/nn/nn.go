@@ -71,6 +71,14 @@ type Options struct {
 	// build of the ONNX Runtime library rather than the CPU one.
 	CUDA     bool
 	DeviceID int
+
+	// Threads is ONNX Runtime's intra-op pool: how many threads may work on a
+	// single evaluation. Zero means one, which is right whenever the caller
+	// provides the parallelism - self-play runs a game per core, and letting ORT
+	// size its own pool on top of that oversubscribes badly. Serving is the
+	// case where it might pay: one move is one goroutine, so the other cores
+	// are idle anyway.
+	Threads int
 }
 
 // Open loads a model exported by training/net.py, shaped for planes planes of
@@ -86,20 +94,20 @@ func OpenWith(modelPath string, planes, w, h int, opts Options) (*Session, error
 		return nil, fmt.Errorf("onnxruntime: %w (no library found under third_party; set %s)", initErr, LibraryEnv)
 	}
 
-	// One thread per Run, because the parallelism is ours: self-play runs a game
-	// per core and every worker calls Run constantly, so ORT sizing its own pool
-	// to the core count would oversubscribe badly. A batch of 4 planes through a
-	// 300k-parameter network is too small to split usefully in any case.
-	//
-	// Measured at 16 workers this changes self-play throughput by nothing at
-	// all - the cost is elsewhere. Kept because it is the correct setting for
-	// the way this is parallelised, not because it bought anything.
+	// One thread per Run unless asked otherwise - see Options.Threads. Measured
+	// at 16 self-play workers, one thread changes throughput by nothing at all;
+	// it is kept because it is the correct setting for the way self-play is
+	// parallelised, not because it bought anything.
 	options, err := ort.NewSessionOptions()
 	if err != nil {
 		return nil, err
 	}
 	defer options.Destroy()
-	if err := options.SetIntraOpNumThreads(1); err != nil {
+	threads := opts.Threads
+	if threads <= 0 {
+		threads = 1
+	}
+	if err := options.SetIntraOpNumThreads(threads); err != nil {
 		return nil, err
 	}
 	if err := options.SetInterOpNumThreads(1); err != nil {

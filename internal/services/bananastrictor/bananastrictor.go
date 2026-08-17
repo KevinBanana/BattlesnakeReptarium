@@ -28,6 +28,17 @@ const (
 
 	// Board is the size the network was trained on
 	Board = 11
+
+	// Threads lets ONNX Runtime split one evaluation across cores. Serving is
+	// the case where that pays: a move is one goroutine descending one tree, so
+	// the rest of the machine is idle while the deadline runs out. Measured on
+	// a four-snake node, one evaluation costs 2.63ms on one thread, 1.14ms on
+	// four and 0.97ms on eight - so four roughly doubles the tree for free.
+	//
+	// Four rather than eight because the pool is per session and shared by every
+	// concurrent request: eight threads is only 17% better on an idle machine
+	// and oversubscribes as soon as two games are in flight.
+	Threads = 4
 )
 
 type Service struct {
@@ -54,7 +65,7 @@ func New() *Service {
 // open is New with the parameters visible, so tests can point at a model of
 // their own without a file at the deployment path.
 func open(path string, sims int, budget time.Duration, board int) (*Service, error) {
-	session, err := nn.Open(path, constrictor.Planes, board, board)
+	session, err := nn.OpenWith(path, constrictor.Planes, board, board, nn.Options{Threads: Threads})
 	if err != nil {
 		return nil, fmt.Errorf("loading %s: %w", path, err)
 	}
