@@ -105,7 +105,7 @@ func open(t *testing.T, board int) *Session {
 		t.Skipf("no ONNX Runtime library matching %s - see training/requirements.txt", libraryGlob)
 	}
 	t.Setenv(LibraryEnv, matches[0])
-	
+
 	session, err := Open(modelPath, constrictor.Planes, board, board)
 	require.NoError(t, err)
 	return session
