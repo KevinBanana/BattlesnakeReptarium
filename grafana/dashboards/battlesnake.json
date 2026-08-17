@@ -83,7 +83,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"battlesnake\", env=\"$env\"} | json | msg = `move request received` | bot =~ `$bot` | engine_latency_ms >= 500 [$__range]))",
+          "expr": "sum(count_over_time({job=\"battlesnake\", env=\"$env\"} | json | msg = `move request received` | bot =~ `$bot` | engine_latency_ms >= 500 | keep bot [$__range]))",
           "queryType": "instant",
           "legendFormat": "timeouts"
         }
@@ -626,6 +626,92 @@
           "calcs": [
             "lastNotNull"
           ]
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Move latency: ours vs engine-measured",
+      "description": "Our own request duration against what the Battlesnake engine measured for the same move. The gap between them is everything outside this process - round trip, TLS, the engine's own overhead - and is the only view of it we get. Engine latency arrives on the following turn's request, so the two are offset by one move: read this as distributions over a window, not as a per-request comparison.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.50, {job=\"battlesnake\", env=\"$env\"} | json | msg = `request` | path =~ `.+/move` | bot =~ `$bot` | __error__ = `` | keep bot, duration | unwrap duration [$__interval]) by () / 1e6",
+          "legendFormat": "ours p50"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.99, {job=\"battlesnake\", env=\"$env\"} | json | msg = `request` | path =~ `.+/move` | bot =~ `$bot` | __error__ = `` | keep bot, duration | unwrap duration [$__interval]) by () / 1e6",
+          "legendFormat": "ours p99"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.50, {job=\"battlesnake\", env=\"$env\"} | json | msg = `move request received` | bot =~ `$bot` | engine_latency_ms > 0 | __error__ = `` | keep bot, engine_latency_ms | unwrap engine_latency_ms [$__interval]) by ()",
+          "legendFormat": "engine p50"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.99, {job=\"battlesnake\", env=\"$env\"} | json | msg = `move request received` | bot =~ `$bot` | engine_latency_ms > 0 | __error__ = `` | keep bot, engine_latency_ms | unwrap engine_latency_ms [$__interval]) by ()",
+          "legendFormat": "engine p99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         }
       }
     },
